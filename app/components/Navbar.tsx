@@ -73,26 +73,25 @@ const Navbar = () => {
   return (
     <header className="font-sans w-full">
       {/* ── ANNOUNCEMENT BAR — normal document flow, scrolls away ── */}
-      <div className="w-full bg-navy text-white text-[11px] md:text-sm px-4 flex justify-between items-center tracking-wide font-semibold uppercase overflow-hidden"
+      <div className="w-full bg-navy text-white text-[11px] md:text-sm tracking-wide font-semibold uppercase overflow-hidden"
         style={{ height: `${BANNER_HEIGHT}px` }}>
-        <div className="w-1/12 md:w-1/4">
-          <button onClick={prevSlide} className="hover:text-accent-red transition-colors p-1">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-12 h-full flex items-center justify-between">
+          <button onClick={prevSlide} className="hover:text-accent-red transition-colors p-1 flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
           </button>
-        </div>
-        <div className="flex-1 relative h-5 overflow-hidden">
-          {slides.map((slide, index) => (
-            <div key={index} className={`absolute inset-0 w-full text-center transition-all duration-700 ease-in-out ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}>
-              {slide}
-            </div>
-          ))}
-        </div>
-        <div className="w-1/12 md:w-1/4 flex justify-end">
-          <button onClick={nextSlide} className="hover:text-accent-red transition-colors p-1">
+          <div className="flex-1 relative h-5 overflow-hidden mx-4">
+            {slides.map((slide, index) => (
+              <div key={index} className={`absolute inset-0 w-full text-center transition-all duration-700 ease-in-out ${index === currentSlide ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}>
+                {slide}
+              </div>
+            ))}
+          </div>
+          <button onClick={nextSlide} className="hover:text-accent-red transition-colors p-1 flex-shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
           </button>
         </div>
       </div>
+
 
       {/* ── MAIN NAVBAR — fixed, tracks banner offset, hides/shows on scroll ── */}
       <nav

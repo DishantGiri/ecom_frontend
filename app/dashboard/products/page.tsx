@@ -446,6 +446,20 @@ export default function ProductsPage() {
                                             className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
                                         />
                                     </div>
+                                    <div className="col-span-2 space-y-4">
+                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+                                            Buy Now Link (URL)
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={formData.productLink}
+                                            onChange={(e) => setFormData({ ...formData, productLink: e.target.value })}
+                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                            placeholder="https://yourcheckout.com/product-123"
+                                        />
+                                        <p className="text-[9px] text-navy/30 font-bold uppercase tracking-widest ml-1">This link opens when a customer clicks &quot;Buy Now&quot; on the product page</p>
+                                    </div>
                                 </div>
 
                                 {/* Media */}
@@ -521,19 +535,19 @@ export default function ProductsPage() {
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                                                 </button>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                                    <div className="space-y-2">
+                                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                                    <div className="col-span-2 space-y-2">
                                                         <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Offer Label</label>
                                                         <input
                                                             type="text" required
                                                             value={offer.label}
                                                             onChange={(e) => handleOfferChange(idx, "label", e.target.value)}
                                                             className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
-                                                            placeholder="Buy 3 Get 2"
+                                                            placeholder="Buy 3 Get 2 Free"
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Quantity</label>
+                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Qty</label>
                                                         <input
                                                             type="number" required
                                                             value={isNaN(offer.quantity) ? '' : offer.quantity}
@@ -542,27 +556,48 @@ export default function ProductsPage() {
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Price ($)</label>
+                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Original Price ($)</label>
+                                                        <input
+                                                            type="number" step="0.01"
+                                                            value={isNaN(offer.originalPrice) ? '' : offer.originalPrice}
+                                                            onChange={(e) => handleOfferChange(idx, "originalPrice", parseFloat(e.target.value) || 0)}
+                                                            className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
+                                                            placeholder="59.95"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Sale Price ($)</label>
                                                         <input
                                                             type="number" step="0.01" required
                                                             value={isNaN(offer.discountedPrice) ? '' : offer.discountedPrice}
                                                             onChange={(e) => handleOfferChange(idx, "discountedPrice", parseFloat(e.target.value) || 0)}
-                                                            className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
+                                                            className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-accent-red"
+                                                            placeholder="24.95"
                                                         />
                                                     </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Bundle Image</label>
-                                                        <div className="relative">
-                                                            <input
-                                                                type="file" accept="image/*"
-                                                                onChange={(e) => handleOfferImageChange(idx, e.target.files?.[0]!)}
-                                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                                            />
-                                                            <div className="w-full bg-white rounded-xl p-3 text-[10px] font-bold text-navy/40 border-0 flex items-center justify-between">
-                                                                <span className="truncate max-w-[100px]">{offerImages[idx] ? offerImages[idx].name : (offer.featureImageUrl ? "Uploaded" : "Upload File")}</span>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+                                                    <div className="col-span-2 md:col-span-5 grid grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Bundle Image</label>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="file" accept="image/*"
+                                                                    onChange={(e) => handleOfferImageChange(idx, e.target.files?.[0]!)}
+                                                                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                                />
+                                                                <div className="w-full bg-white rounded-xl p-3 text-[10px] font-bold text-navy/40 border-0 flex items-center justify-between">
+                                                                    <span className="truncate max-w-[150px]">{offerImages[idx] ? offerImages[idx].name : (offer.featureImageUrl ? "✓ Image Uploaded" : "Upload Bundle Image")}</span>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        {offer.originalPrice > 0 && offer.discountedPrice > 0 && (
+                                                            <div className="flex items-end pb-0.5">
+                                                                <div className="w-full bg-green-50 rounded-xl p-3 border border-green-100">
+                                                                    <p className="text-[9px] font-black text-green-600 uppercase tracking-widest">Customer Saves</p>
+                                                                    <p className="text-sm font-black text-green-700">${(offer.originalPrice - offer.discountedPrice).toFixed(2)} USD</p>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

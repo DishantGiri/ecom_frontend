@@ -62,6 +62,11 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
     const thumbRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+    // Reset to first image whenever the images list changes (e.g. offer selected)
+    useEffect(() => {
+        setActiveIndex(0);
+    }, [images]);
+
     const go = useCallback((dir: "prev" | "next") => {
         setActiveIndex((prev) => {
             if (dir === "next") return prev < images.length - 1 ? prev + 1 : 0;
@@ -383,39 +388,71 @@ export default function ProductPage() {
                                             <button
                                                 key={offer.id}
                                                 onClick={() => handleSelectOffer(offer)}
-                                                className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all duration-200 relative overflow-hidden"
+                                                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all duration-200 relative overflow-hidden"
                                                 style={isActive
                                                     ? { background: "linear-gradient(135deg, #001F3F 0%, #00325c 100%)", boxShadow: "0 8px 24px rgba(0,31,63,0.22), inset 0 1px 0 rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.07)" }
                                                     : { background: "rgba(255,255,255,0.75)", backdropFilter: "blur(8px)", border: "1px solid rgba(0,31,63,0.08)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }
                                                 }
                                             >
-                                                {isActive && (
-                                                    <div className="absolute inset-0 pointer-events-none"
-                                                        style={{ background: "linear-gradient(105deg, rgba(255,255,255,0.07) 0%, transparent 60%)" }} />
-                                                )}
-                                                <div className="w-11 h-11 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
-                                                    style={isActive ? { background: "rgba(255,255,255,0.1)" } : { background: "rgba(0,31,63,0.03)" }}>
-                                                    {offer.featureImageUrl ? (
-                                                        <img src={getImageUrl(offer.featureImageUrl)} alt={offer.label} className="w-full h-full object-contain p-1" />
-                                                    ) : (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: isActive ? "rgba(255,255,255,0.3)" : "rgba(0,31,63,0.2)" }}>
-                                                            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" />
-                                                        </svg>
+                                                {/* Shine overlay */}
+                                                {isActive && <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(105deg, rgba(255,255,255,0.07) 0%, transparent 60%)" }} />}
+
+                                                {/* Thumbnail — offer image, fallback to product main image */}
+                                                {(() => {
+                                                    const thumbSrc = offer.featureImageUrl
+                                                        ? getImageUrl(offer.featureImageUrl)
+                                                        : getImageUrl(product.featureImageUrl);
+                                                    return (
+                                                        <div className="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
+                                                            style={isActive ? { background: "rgba(255,255,255,0.1)" } : { background: "rgba(0,31,63,0.04)" }}>
+                                                            {thumbSrc ? (
+                                                                <img
+                                                                    src={thumbSrc}
+                                                                    alt={offer.label}
+                                                                    className="w-full h-full object-contain p-1"
+                                                                    onError={(e) => {
+                                                                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                                        (e.currentTarget.nextElementSibling as HTMLElement | null)?.setAttribute("style", "display:block");
+                                                                    }}
+                                                                />
+                                                            ) : null}
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                                                                style={{ color: isActive ? "rgba(255,255,255,0.3)" : "rgba(0,31,63,0.2)", display: thumbSrc ? "none" : "block" }}>
+                                                                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" />
+                                                            </svg>
+                                                        </div>
+                                                    );
+                                                })()}
+
+                                                {/* Label — left center */}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-black text-[13px] leading-snug" style={{ color: isActive ? "#ffffff" : "#001F3F" }}>
+                                                        {offer.label}
+                                                    </p>
+                                                    {offerSavings > 0 && (
+                                                        <p className="text-[9px] font-black uppercase tracking-wider mt-0.5"
+                                                            style={{ color: isActive ? "#86efac" : "#16a34a" }}>
+                                                            You Save ${offerSavings.toFixed(2)}
+                                                        </p>
                                                     )}
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-black text-[13px] leading-tight" style={{ color: isActive ? "#ffffff" : "#001F3F" }}>{offer.label}</p>
-                                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                                        <span className="text-sm font-black" style={{ color: isActive ? "rgba(255,255,255,0.9)" : "#D32F2F" }}>${offer.discountedPrice.toFixed(2)}</span>
-                                                        {offer.originalPrice > 0 && (
-                                                            <span className="text-[11px] font-medium line-through" style={{ color: isActive ? "rgba(255,255,255,0.35)" : "rgba(0,31,63,0.25)" }}>${offer.originalPrice.toFixed(2)}</span>
-                                                        )}
-                                                        {offerSavings > 0 && (
-                                                            <span className="text-[10px] font-black" style={{ color: isActive ? "#86efac" : "#16a34a" }}>· Save ${offerSavings.toFixed(2)}</span>
-                                                        )}
-                                                    </div>
+
+                                                {/* Price block — right aligned */}
+                                                <div className="text-right flex-shrink-0">
+                                                    {offer.originalPrice > 0 && (
+                                                        <p className="text-[10px] font-medium line-through leading-none mb-0.5"
+                                                            style={{ color: isActive ? "rgba(255,255,255,0.35)" : "rgba(0,31,63,0.28)" }}>
+                                                            ${offer.originalPrice.toFixed(2)}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-sm font-black leading-none"
+                                                        style={{ color: isActive ? "#ffffff" : "#D32F2F" }}>
+                                                        ${offer.discountedPrice.toFixed(2)} USD
+                                                    </p>
                                                 </div>
-                                                <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center"
+
+                                                {/* Check indicator */}
+                                                <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center ml-1"
                                                     style={isActive ? { background: "white" } : { border: "2px solid rgba(0,31,63,0.15)" }}>
                                                     {isActive && (
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#001F3F" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">

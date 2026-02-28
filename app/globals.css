@@ -34,28 +34,41 @@ body {
   padding: 0;
 }
 
-/* Custom Scrollbar for premium feel */
-::-webkit-scrollbar {
-  width: 8px;
-}
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
 
-::-webkit-scrollbar-thumb {
-  background: var(--navy);
-  border-radius: 0;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-red);
-}
-
-/* Hide scrollbar on carousels while keeping scroll functional */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Thin scrollbar — 3px pill */
+html::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 3px !important;
+  height: 3px !important;
+}
+
+html::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+html::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 31, 63, 0.2) !important;
+  border-radius: 99px !important;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(211, 47, 47, 0.5) !important;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 31, 63, 0.2) transparent;
+}
+
 
 /* Product image slider progress bar */
 @keyframes slideProgress {
