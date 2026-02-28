@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useCurrency } from "../components/CurrencyProvider";
 
 const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-0.5">
@@ -17,6 +18,7 @@ const StarRating = ({ rating }: { rating: number }) => (
 );
 
 function ProductsContent() {
+    const { currency, currencySymbol } = useCurrency();
     const searchParams = useSearchParams();
     const router = useRouter();
     const [products, setProducts] = useState<any[]>([]);
@@ -54,10 +56,10 @@ function ProductsContent() {
             setLoading(true);
             try {
                 const query = searchParams.get("q");
-                let url = `${apiHost}/api/products`;
+                let url = `${apiHost}/api/products?currency=${currency}`;
 
                 if (query) {
-                    url = `${apiHost}/api/products/search?keyword=${encodeURIComponent(query)}`;
+                    url = `${apiHost}/api/products/search?keyword=${encodeURIComponent(query)}&currency=${currency}`;
                 }
 
                 const response = await fetch(url);
@@ -72,12 +74,12 @@ function ProductsContent() {
             }
         };
         fetchProducts();
-    }, [apiHost, searchParams]);
+    }, [apiHost, searchParams, currency]);
 
     useEffect(() => {
         const fetchRecommendations = async () => {
             try {
-                const response = await fetch(`${apiHost}/api/products`);
+                const response = await fetch(`${apiHost}/api/products?currency=${currency}`);
                 if (response.ok) {
                     const data = await response.json();
                     setRecommendations(data.slice(0, 4));
@@ -87,7 +89,7 @@ function ProductsContent() {
             }
         };
         fetchRecommendations();
-    }, [apiHost]);
+    }, [apiHost, currency]);
 
     // Close menus when clicking outside
     useEffect(() => {
@@ -306,7 +308,7 @@ function ProductsContent() {
                                 <div className="absolute top-full left-0 mt-8 w-96 bg-white shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
                                     <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-gray-100">
                                         <span className="text-[15px] font-medium text-navy/70">
-                                            The highest price is ${maxProductPrice.toFixed(2)}
+                                            The highest price is {currencySymbol}{maxProductPrice.toFixed(2)}
                                         </span>
                                         <button onClick={resetPrice} className="text-[15px] font-medium text-navy underline underline-offset-4 decoration-1 decoration-navy/30 hover:decoration-navy transition-all">
                                             Reset
@@ -315,7 +317,7 @@ function ProductsContent() {
                                     <div className="p-6">
                                         <div className="flex items-center gap-4">
                                             <div className="relative flex-1">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">$</span>
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -330,7 +332,7 @@ function ProductsContent() {
                                                 />
                                             </div>
                                             <div className="relative flex-1">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">$</span>
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -448,11 +450,11 @@ function ProductsContent() {
                                     <div className="flex items-baseline gap-2.5 pt-0.5">
                                         {product.originalPrice > product.discountedPrice && (
                                             <span className="text-[13px] font-medium text-navy/20 line-through">
-                                                ${product.originalPrice.toFixed(2)} USD
+                                                {currencySymbol}{product.originalPrice.toFixed(2)} {currency}
                                             </span>
                                         )}
                                         <span className="text-sm lg:text-base font-black text-navy">
-                                            From ${product.discountedPrice.toFixed(2)} USD
+                                            From {currencySymbol}{product.discountedPrice.toFixed(2)} {currency}
                                         </span>
                                     </div>
                                 </div>
@@ -529,11 +531,11 @@ function ProductsContent() {
                                         <div className="flex items-baseline gap-2.5 pt-0.5">
                                             {product.originalPrice > product.discountedPrice && (
                                                 <span className="text-[13px] font-medium text-navy/20 line-through">
-                                                    ${product.originalPrice.toFixed(2)} USD
+                                                    {currencySymbol}{product.originalPrice.toFixed(2)} {currency}
                                                 </span>
                                             )}
                                             <span className="text-base font-black text-navy">
-                                                From ${product.discountedPrice.toFixed(2)} USD
+                                                From {currencySymbol}{product.discountedPrice.toFixed(2)} {currency}
                                             </span>
                                         </div>
                                     </div>

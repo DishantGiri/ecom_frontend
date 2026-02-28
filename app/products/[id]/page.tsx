@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { trackProductClick } from "../../utils/tracking";
+import { useCurrency } from "../../components/CurrencyProvider";
 
 interface Offer {
     id: number;
@@ -57,6 +59,7 @@ function StarRating({ rating, size = 13 }: { rating: number; size?: number }) {
 // ─── Image Gallery ────────────────────────────────────────────────────────────
 
 function ImageGallery({ images, title, savings }: { images: string[]; title: string; savings: number }) {
+    const { currencySymbol } = useCurrency();
     const [activeIndex, setActiveIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const thumbRef = useRef<HTMLDivElement>(null);
@@ -139,7 +142,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
                         className="absolute top-3 left-3 z-30 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider"
                         style={{ background: "linear-gradient(135deg, #D32F2F, #FF5252)", boxShadow: "0 4px 12px rgba(211,47,47,0.35)" }}
                     >
-                        Save ${savings.toFixed(2)}
+                        Save {currencySymbol}{savings.toFixed(2)}
                     </div>
                 )}
 
@@ -269,6 +272,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
 export default function ProductPage() {
     const { id } = useParams<{ id: string }>();
     const router = useRouter();
+    const { currency, currencySymbol } = useCurrency();
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
@@ -280,7 +284,7 @@ export default function ProductPage() {
         if (!id) return;
         (async () => {
             try {
-                const res = await fetch(`${apiHost}/api/products/${id}`);
+                const res = await fetch(`${apiHost}/api/products/${id}?currency=${currency}`);
                 if (!res.ok) { router.push("/"); return; }
                 const data: Product = await res.json();
                 setProduct(data);
@@ -294,13 +298,13 @@ export default function ProductPage() {
                 setLoading(false);
             }
         })();
-    }, [id, router]);
+    }, [id, router, apiHost, currency]);
 
     // Fetch fallback recommendations if similarProducts is empty
     useEffect(() => {
         const fetchRecommendations = async () => {
             try {
-                const res = await fetch(`${apiHost}/api/products`);
+                const res = await fetch(`${apiHost}/api/products?currency=${currency}`);
                 if (res.ok) {
                     const data = await res.json();
                     // Filter out the current product and take first 4
@@ -311,7 +315,7 @@ export default function ProductPage() {
             }
         };
         fetchRecommendations();
-    }, [id, apiHost]);
+    }, [id, apiHost, currency]);
 
     const handleSelectOffer = (offer: Offer) => {
         setSelectedOffer(offer);
@@ -322,6 +326,9 @@ export default function ProductPage() {
     };
 
     const handleBuyNow = () => {
+        if (product?.id) {
+            trackProductClick(product.id);
+        }
         if (product?.productLink) window.open(product.productLink, "_blank");
         else alert("Checkout link not configured.");
     };
@@ -393,9 +400,9 @@ export default function ProductPage() {
                         <div className="space-y-3">
                             <div className="flex items-center gap-4">
                                 {displayOriginal > displayPrice && (
-                                    <span className="text-lg font-medium text-navy/30 line-through">${displayOriginal.toFixed(2)} USD</span>
+                                    <span className="text-lg font-medium text-navy/30 line-through">{currencySymbol}{displayOriginal.toFixed(2)} {currency}</span>
                                 )}
-                                <span className="text-2xl font-black text-navy">${displayPrice.toFixed(2)} USD</span>
+                                <span className="text-2xl font-black text-navy">{currencySymbol}{displayPrice.toFixed(2)} {currency}</span>
                                 {displayOriginal > displayPrice && (
                                     <span className="bg-[#3D5BC9] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                         Sale
@@ -476,7 +483,7 @@ export default function ProductPage() {
                                                     {offerSavings > 0 && (
                                                         <p className="text-[10px] font-black uppercase tracking-wider mt-1"
                                                             style={{ color: isActive ? "#86efac" : "#16a34a" }}>
-                                                            You Save ${offerSavings.toFixed(2)}
+                                                            You Save {currencySymbol}{offerSavings.toFixed(2)}
                                                         </p>
                                                     )}
                                                 </div>
@@ -486,12 +493,12 @@ export default function ProductPage() {
                                                     {offer.originalPrice > 0 && (
                                                         <p className="text-[11px] font-medium line-through leading-none mb-1"
                                                             style={{ color: isActive ? "rgba(255,255,255,0.35)" : "rgba(0,31,63,0.28)" }}>
-                                                            ${offer.originalPrice.toFixed(2)}
+                                                            {currencySymbol}{offer.originalPrice.toFixed(2)}
                                                         </p>
                                                     )}
                                                     <p className="text-base font-black leading-none"
                                                         style={{ color: isActive ? "#ffffff" : "#D32F2F" }}>
-                                                        ${offer.discountedPrice.toFixed(2)} USD
+                                                        {currencySymbol}{offer.discountedPrice.toFixed(2)} {currency}
                                                     </p>
                                                 </div>
 
@@ -627,11 +634,11 @@ export default function ProductPage() {
                                             <div className="flex items-baseline gap-2.5 pt-0.5">
                                                 {sp.originalPrice > sp.discountedPrice && (
                                                     <span className="text-[13px] font-medium text-navy/20 line-through">
-                                                        ${sp.originalPrice.toFixed(2)} USD
+                                                        {currencySymbol}{sp.originalPrice.toFixed(2)} {currency}
                                                     </span>
                                                 )}
                                                 <span className="text-sm lg:text-base font-black text-navy">
-                                                    From ${sp.discountedPrice.toFixed(2)} USD
+                                                    From {currencySymbol}{sp.discountedPrice.toFixed(2)} {currency}
                                                 </span>
                                             </div>
                                         </div>

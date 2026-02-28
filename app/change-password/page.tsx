@@ -26,8 +26,7 @@ export default function ChangePasswordPage() {
 
         try {
             const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
-            const email = localStorage.getItem("registered_email");
-            const token = localStorage.getItem("token");
+            const token = localStorage.getItem("ecom_token");
 
             const response = await fetch(`${apiHost}/api/change-password`, {
                 method: 'POST',
@@ -36,7 +35,6 @@ export default function ChangePasswordPage() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    email: email,
                     newPassword: newPassword
                 }),
             });

@@ -20,7 +20,7 @@ const StarRating = ({ rating }: { rating: number }) => (
     </div>
 );
 
-export default function BestSellers() {
+export default function NewArrivals() {
     const { currency, currencySymbol } = useCurrency();
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -32,10 +32,10 @@ export default function BestSellers() {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await fetch(`${apiHost}/api/products/popular?currency=${currency}`);
+                const response = await fetch(`${apiHost}/api/products?currency=${currency}`);
                 if (response.ok) {
                     const data = await response.json();
-                    setProducts(data.slice(0, 8));
+                    setProducts(data.reverse().slice(0, 8));
                 }
             } catch (error) {
                 console.error("Error fetching products:", error);
@@ -80,7 +80,7 @@ export default function BestSellers() {
     };
 
     return (
-        <section className="bg-white pt-20 pb-10 px-6 md:px-12 font-sans overflow-hidden">
+        <section className="bg-white py-10 px-6 md:px-12 font-sans overflow-hidden border-t border-gray-50">
             <div className="max-w-[1440px] mx-auto">
 
                 {/* Header */}
@@ -88,10 +88,10 @@ export default function BestSellers() {
                     <div>
                         <div className="flex items-center gap-3 mb-3">
                             <div className="h-px w-8 bg-accent-red" />
-                            <span className="text-accent-red text-[10px] font-black uppercase tracking-[0.3em]">Top Picks</span>
+                            <span className="text-accent-red text-[10px] font-black uppercase tracking-[0.3em]">Just Added</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black text-navy tracking-tight">
-                            Best Sellers
+                            New Arrivals
                         </h2>
                     </div>
 
@@ -139,17 +139,15 @@ export default function BestSellers() {
                             style={{ scrollSnapAlign: "start" }}
                         >
                             {/* Image area — square ratio, no border, no shadow */}
-                            <div className="relative w-full aspect-square rounded-2xl bg-white mb-5 overflow-hidden">
+                            <div className="relative w-full aspect-square rounded-2xl bg-white mb-5 overflow-hidden border border-gray-50 transition-colors group-hover:border-navy/5">
 
-                                {/* Sale badge — top-right of image */}
-                                {product.discountedPrice < product.originalPrice && (
-                                    <span className="absolute top-3 right-3 z-30 text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#3D5BC9] text-white">
-                                        Sale
-                                    </span>
-                                )}
+                                {/* New badge — top-right of image */}
+                                <span className="absolute top-3 right-3 z-30 text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#3D5BC9] text-white">
+                                    New Item
+                                </span>
 
                                 {/* Front image — fills area, no shadow */}
-                                <div className="absolute inset-0 z-10 flex items-center justify-center">
+                                <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
                                     <div className="relative w-full h-full">
                                         <img
                                             src={getImageUrl(product.featureImageUrl)}
@@ -162,7 +160,7 @@ export default function BestSellers() {
                                 {/* Hover CTA */}
                                 <div className="absolute bottom-0 inset-x-0 z-20 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                                     <div className="bg-navy text-white text-[10px] font-black uppercase tracking-widest text-center py-3">
-                                        View Product →
+                                        Quick View →
                                     </div>
                                 </div>
                             </div>
@@ -208,20 +206,18 @@ export default function BestSellers() {
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                     </button>
                 </div>
-
                 {/* View All */}
                 <div className="flex justify-center mt-12">
                     <Link
                         href="/products"
-                        className="inline-flex items-center gap-2.5 px-10 py-4 bg-navy hover:bg-accent-red text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all duration-300 shadow-lg shadow-navy/20 group"
+                        className="inline-flex items-center gap-2.5 px-10 py-4 bg-accent-red hover:bg-navy text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all duration-300 shadow-lg shadow-accent-red/20 group"
                     >
-                        View All Products
+                        View All Latest Arrivals
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform duration-300">
                             <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
                         </svg>
                     </Link>
                 </div>
-
             </div>
         </section>
     );

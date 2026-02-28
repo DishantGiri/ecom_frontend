@@ -3,6 +3,40 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCurrency } from "./CurrencyProvider";
+
+const CURRENCIES = [
+  { code: "AUD", name: "Australian Dollar", symbol: "A$", flag: "au" },
+  { code: "BRL", name: "Brazilian Real", symbol: "R$", flag: "br" },
+  { code: "CAD", name: "Canadian Dollar", symbol: "C$", flag: "ca" },
+  { code: "CHF", name: "Swiss Franc", symbol: "CHF", flag: "ch" },
+  { code: "CNY", name: "Chinese Yuan", symbol: "¥", flag: "cn" },
+  { code: "CZK", name: "Czech Koruna", symbol: "Kč", flag: "cz" },
+  { code: "DKK", name: "Danish Krone", symbol: "kr.", flag: "dk" },
+  { code: "EUR", name: "Euro", symbol: "€", flag: "eu" },
+  { code: "GBP", name: "British Pound", symbol: "£", flag: "gb" },
+  { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", flag: "hk" },
+  { code: "HUF", name: "Hungarian Forint", symbol: "Ft", flag: "hu" },
+  { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp", flag: "id" },
+  { code: "ILS", name: "Israeli New Shekel", symbol: "₪", flag: "il" },
+  { code: "INR", name: "Indian Rupee", symbol: "₹", flag: "in" },
+  { code: "ISK", name: "Icelandic Króna", symbol: "kr", flag: "is" },
+  { code: "JPY", name: "Japanese Yen", symbol: "¥", flag: "jp" },
+  { code: "KRW", name: "South Korean Won", symbol: "₩", flag: "kr" },
+  { code: "MXN", name: "Mexican Peso", symbol: "Mex$", flag: "mx" },
+  { code: "MYR", name: "Malaysian Ringgit", symbol: "RM", flag: "my" },
+  { code: "NOK", name: "Norwegian Krone", symbol: "kr", flag: "no" },
+  { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", flag: "nz" },
+  { code: "PHP", name: "Philippine Peso", symbol: "₱", flag: "ph" },
+  { code: "PLN", name: "Polish Złoty", symbol: "zł", flag: "pl" },
+  { code: "RON", name: "Romanian Leu", symbol: "lei", flag: "ro" },
+  { code: "SEK", name: "Swedish Krona", symbol: "kr", flag: "se" },
+  { code: "SGD", name: "Singapore Dollar", symbol: "S$", flag: "sg" },
+  { code: "THB", name: "Thai Baht", symbol: "฿", flag: "th" },
+  { code: "TRY", name: "Turkish Lira", symbol: "₺", flag: "tr" },
+  { code: "USD", name: "US Dollar", symbol: "$", flag: "us" },
+  { code: "ZAR", name: "South African Rand", symbol: "R", flag: "za" }
+];
 
 const BANNER_HEIGHT = 40; // px — height of announcement bar
 
@@ -14,6 +48,9 @@ const Navbar = () => {
   const [navVisible, setNavVisible] = useState(true);
   const [navTop, setNavTop] = useState(BANNER_HEIGHT);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  const { currency, setCurrency, currencySymbol } = useCurrency();
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
 
   useEffect(() => {
     const auth = localStorage.getItem("ecom_token");
@@ -145,10 +182,35 @@ const Navbar = () => {
             </form>
 
             {/* Currency */}
-            <div className="flex items-center space-x-2 px-3 py-2 bg-navy/90 text-white rounded-full cursor-pointer hover:bg-navy transition-all group">
-              <span className="text-[11px] font-black tracking-widest opacity-80 uppercase">US</span>
-              <span className="text-[13px] font-bold">USD $</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="opacity-50 group-hover:opacity-100 transition-opacity"><path d="m6 9 6 6 6-6" /></svg>
+            <div className="relative">
+              <div
+                onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
+                className="flex items-center space-x-2 px-3 py-2 bg-navy/90 text-white rounded-full lg:rounded-lg xl:rounded-full cursor-pointer hover:bg-navy transition-all group"
+              >
+                <img src={`https://flagcdn.com/w20/${CURRENCIES.find(c => c.code === currency)?.flag || 'us'}.png`} alt={currency} className="w-5 h-auto object-cover rounded-sm" />
+                <span className="text-[13px] font-bold ml-1">{currency} {currencySymbol}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`opacity-50 group-hover:opacity-100 transition-transform ${isCurrencyOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
+              </div>
+
+              {isCurrencyOpen && (
+                <div onMouseLeave={() => setIsCurrencyOpen(false)} className="absolute top-full right-0 mt-3 w-56 max-h-[400px] overflow-y-auto bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 hide-scrollbar py-2">
+                  <div className="flex flex-col">
+                    {CURRENCIES.map(curr => (
+                      <button
+                        key={curr.code}
+                        onClick={() => { setCurrency(curr.code); setIsCurrencyOpen(false); }}
+                        className={`text-left px-4 py-2.5 flex items-start space-x-3 transition-colors ${currency === curr.code ? 'bg-navy/5' : 'hover:bg-gray-50'}`}
+                      >
+                        <img src={`https://flagcdn.com/w20/${curr.flag}.png`} alt={curr.code} className="w-5 h-auto object-cover rounded-sm mt-0.5" />
+                        <div className="flex flex-col">
+                          <span className={`text-[13px] leading-tight ${currency === curr.code ? 'font-black text-navy' : 'font-medium text-navy/80'}`}>{curr.name}</span>
+                          <span className="text-[11px] font-bold text-navy/40 mt-0.5 uppercase tracking-wider">{curr.code} ({curr.symbol})</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Account Dropdown */}
