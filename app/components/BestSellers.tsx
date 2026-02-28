@@ -11,8 +11,8 @@ const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((s) => (
             <svg key={s} xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
-                fill={s <= Math.round(rating) ? "#F59E0B" : "none"}
-                stroke="#F59E0B" strokeWidth="1.5">
+                fill={s <= Math.round(rating) ? "#3D5BC9" : "none"}
+                stroke="#3D5BC9" strokeWidth="1.5">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
         ))}
@@ -33,7 +33,7 @@ export default function BestSellers() {
                 const response = await fetch(`${apiHost}/api/products`);
                 if (response.ok) {
                     const data = await response.json();
-                    setProducts(data);
+                    setProducts(data.slice(0, 8));
                 }
             } catch (error) {
                 console.error("Error fetching products:", error);
@@ -140,12 +140,11 @@ export default function BestSellers() {
                             <div className="relative w-full aspect-square rounded-2xl bg-white mb-5 overflow-hidden">
 
                                 {/* Sale badge — top-right of image */}
-                                <span className={`absolute top-3 right-3 z-30 text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full ${product.category === "Injectables"
-                                    ? "bg-navy text-white"
-                                    : "bg-accent-red text-white"
-                                    }`}>
-                                    {product.category || "Supplements"}
-                                </span>
+                                {product.discountedPrice < product.originalPrice && (
+                                    <span className="absolute top-3 right-3 z-30 text-[11px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full bg-[#3D5BC9] text-white">
+                                        Sale
+                                    </span>
+                                )}
 
                                 {/* Front image — fills area, no shadow */}
                                 <div className="absolute inset-0 z-10 flex items-center justify-center">

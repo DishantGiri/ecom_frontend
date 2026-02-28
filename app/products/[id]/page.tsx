@@ -39,14 +39,14 @@ function getImageUrl(url: string): string {
 
 function StarRating({ rating, size = 13 }: { rating: number; size?: number }) {
     return (
-        <div className="flex items-center gap-px">
+        <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((s) => (
                 <svg key={s} width={size} height={size} viewBox="0 0 24 24">
                     <polygon
                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                        fill={s <= Math.ceil(rating) ? "#F59E0B" : "#E5E7EB"}
-                        stroke={s <= Math.ceil(rating) ? "#F59E0B" : "#D1D5DB"}
-                        strokeWidth="1"
+                        fill={s <= Math.ceil(rating) ? "#3D5BC9" : "none"}
+                        stroke="#3D5BC9"
+                        strokeWidth="1.5"
                     />
                 </svg>
             ))}
@@ -82,12 +82,19 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }, [go, images.length, isPaused]);
 
-    // Scroll active thumb into view
+    // Scroll active thumb into view — manual scroll to prevent page jumping
     useEffect(() => {
-        const el = thumbRef.current;
-        if (!el) return;
-        const thumb = el.children[activeIndex] as HTMLElement;
-        if (thumb) thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        const container = thumbRef.current;
+        if (!container) return;
+        const thumb = container.children[activeIndex] as HTMLElement;
+        if (!thumb) return;
+
+        // Calculate the center position within the container
+        const scrollLeft = thumb.offsetLeft - (container.offsetWidth / 2) + (thumb.offsetWidth / 2);
+        container.scrollTo({
+            left: scrollLeft,
+            behavior: "smooth"
+        });
     }, [activeIndex]);
 
     if (images.length === 0) return null;
@@ -99,22 +106,37 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
             onMouseLeave={() => setIsPaused(false)}
         >
             {/* ── Main Image ── */}
-            <div className="relative w-full overflow-hidden rounded-xl mb-3 group" style={{ height: "480px" }}>
-                {/* Image — fixed height, covers at natural ratio */}
-                <img
-                    key={images[activeIndex]}
-                    src={images[activeIndex]}
-                    alt={title}
-                    className="w-full h-full object-cover transition-opacity duration-300"
+            <div className="relative w-full overflow-hidden rounded-2xl mb-3 group" style={{ height: "480px" }}>
+                {/* Background Shadow/Blur Layer — fully covers 'background color' with image colors */}
+                <div
+                    className="absolute inset-0 z-0 transition-opacity duration-700"
                     style={{
-                        filter: "drop-shadow(0 16px 48px rgba(0,31,63,0.13))",
+                        backgroundImage: `url(${images[activeIndex]})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        filter: 'blur(60px) saturate(1.1) brightness(1.1)',
+                        opacity: 0.4, // Increased opacity to ensure it's not transparent to a background color
+                        transform: 'scale(1.2)'
                     }}
                 />
+
+                {/* Main Foreground Image — original ratio, floating with breathing room */}
+                <div className="relative z-10 w-full h-full p-8 flex items-center justify-center pointer-events-none">
+                    <img
+                        key={images[activeIndex]}
+                        src={images[activeIndex]}
+                        alt={title}
+                        className="max-w-full max-h-full object-contain transition-all duration-300 transform group-hover:scale-[1.02]"
+                        style={{
+                            filter: "drop-shadow(0 20px 60px rgba(0,31,63,0.15))",
+                        }}
+                    />
+                </div>
 
                 {/* Save badge */}
                 {savings > 0 && (
                     <div
-                        className="absolute top-3 left-3 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider"
+                        className="absolute top-3 left-3 z-30 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider"
                         style={{ background: "linear-gradient(135deg, #D32F2F, #FF5252)", boxShadow: "0 4px 12px rgba(211,47,47,0.35)" }}
                     >
                         Save ${savings.toFixed(2)}
@@ -123,7 +145,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
 
                 {/* Auto-slide progress bar */}
                 {images.length > 1 && !isPaused && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: "rgba(255,255,255,0.12)" }}>
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] z-30" style={{ background: "rgba(255,255,255,0.12)" }}>
                         <div
                             key={`prog-${activeIndex}`}
                             style={{
@@ -140,7 +162,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
                     <>
                         <button
                             onClick={() => go("prev")}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 z-30"
                             style={{
                                 background: "rgba(255,255,255,0.85)",
                                 backdropFilter: "blur(8px)",
@@ -153,7 +175,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
                         </button>
                         <button
                             onClick={() => go("next")}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 z-30"
                             style={{
                                 background: "rgba(255,255,255,0.85)",
                                 backdropFilter: "blur(8px)",
@@ -166,7 +188,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
                         </button>
 
                         {/* Dot indicators */}
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
                             {images.map((_, i) => (
                                 <button
                                     key={i}
@@ -252,6 +274,7 @@ export default function ProductPage() {
     const [loading, setLoading] = useState(true);
     const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
     const [galleryImages, setGalleryImages] = useState<string[]>([]);
+    const [recommendations, setRecommendations] = useState<Product[]>([]);
 
     useEffect(() => {
         if (!id) return;
@@ -272,6 +295,23 @@ export default function ProductPage() {
             }
         })();
     }, [id, router]);
+
+    // Fetch fallback recommendations if similarProducts is empty
+    useEffect(() => {
+        const fetchRecommendations = async () => {
+            try {
+                const res = await fetch(`${apiHost}/api/products`);
+                if (res.ok) {
+                    const data = await res.json();
+                    // Filter out the current product and take first 4
+                    setRecommendations(data.filter((p: Product) => p.id !== Number(id)).slice(0, 4));
+                }
+            } catch (e) {
+                console.error("Error fetching recommendations:", e);
+            }
+        };
+        fetchRecommendations();
+    }, [id, apiHost]);
 
     const handleSelectOffer = (offer: Offer) => {
         setSelectedOffer(offer);
@@ -310,7 +350,7 @@ export default function ProductPage() {
 
             {/* Breadcrumb */}
             <div style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(0,31,63,0.06)" }}>
-                <div className="max-w-6xl mx-auto px-8 py-2.5 flex items-center gap-2 text-[10px] font-semibold text-navy/35 uppercase tracking-wider">
+                <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-2.5 flex items-center gap-2 text-[10px] font-semibold text-navy/35 uppercase tracking-wider">
                     <Link href="/" className="hover:text-navy transition-colors">Home</Link>
                     <span className="text-navy/20">/</span>
                     <Link href="/" className="hover:text-navy transition-colors">{product.category}</Link>
@@ -320,7 +360,7 @@ export default function ProductPage() {
             </div>
 
             {/* Main Grid */}
-            <div className="max-w-6xl mx-auto px-8 py-10 lg:py-14">
+            <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-10 lg:py-14">
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-10 lg:gap-16 items-start">
 
                     {/* LEFT — Image Gallery */}
@@ -329,47 +369,51 @@ export default function ProductPage() {
                     {/* RIGHT — Product Info */}
                     <div className="space-y-5">
 
-                        {/* Category pill */}
-                        <span
-                            className="inline-block text-[9px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full"
-                            style={{ background: "linear-gradient(135deg, rgba(211,47,47,0.08), rgba(211,47,47,0.12))", color: "#D32F2F", border: "1px solid rgba(211,47,47,0.15)" }}
+                        {/* Category pill — Link to filtered results */}
+                        <Link
+                            href={`/products?category=${encodeURIComponent(product.category)}`}
+                            className="inline-block text-[9px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full transition-all hover:scale-105 active:scale-95"
+                            style={{ background: "linear-gradient(135deg, rgba(61,91,201,0.08), rgba(61,91,201,0.12))", color: "#3D5BC9", border: "1px solid rgba(61,91,201,0.15)" }}
                         >
                             {product.category}
-                        </span>
+                        </Link>
 
                         {/* Title */}
-                        <h1 className="text-2xl lg:text-3xl font-black text-navy leading-tight tracking-tight">
+                        <h1 className="text-2xl lg:text-3xl font-black text-navy leading-tight tracking-tight line-clamp-2">
                             {product.title}
                         </h1>
 
                         {/* Rating */}
                         <div className="flex items-center gap-2">
-                            <StarRating rating={product.starRating} size={14} />
-                            <span className="text-[12px] font-black text-navy">{product.starRating.toFixed(1)}</span>
-                            <span className="w-px h-3 bg-gray-200 mx-0.5" />
-                            <span className="text-[12px] font-medium text-navy/40">{product.numberOfReviews.toLocaleString()} Reviews</span>
+                            <StarRating rating={product.starRating} size={16} />
+                            <span className="text-sm font-medium text-navy/50">{product.numberOfReviews.toLocaleString()} reviews</span>
                         </div>
 
-                        {/* Price — glass card */}
-                        <div
-                            className="flex items-end gap-3 p-4 rounded-2xl"
-                            style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(10px)", border: "1px solid rgba(0,31,63,0.07)", boxShadow: "0 4px 24px rgba(0,31,63,0.05)" }}
-                        >
-                            <div>
-                                <span className="text-[11px] font-medium text-navy/30 line-through block leading-none mb-1">${displayOriginal.toFixed(2)} USD</span>
-                                <div className="flex items-baseline gap-1.5">
-                                    <span className="text-3xl font-black text-navy">${displayPrice.toFixed(2)}</span>
-                                    <span className="text-xs font-semibold text-navy/40">USD</span>
-                                </div>
+                        {/* Price Section */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-4">
+                                {displayOriginal > displayPrice && (
+                                    <span className="text-lg font-medium text-navy/30 line-through">${displayOriginal.toFixed(2)} USD</span>
+                                )}
+                                <span className="text-2xl font-black text-navy">${displayPrice.toFixed(2)} USD</span>
+                                {displayOriginal > displayPrice && (
+                                    <span className="bg-[#3D5BC9] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                        Sale
+                                    </span>
+                                )}
                             </div>
-                            {savings > 0 && (
-                                <span
-                                    className="mb-0.5 inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full"
-                                    style={{ background: "linear-gradient(135deg, #dcfce7, #bbf7d0)", color: "#16a34a", boxShadow: "0 2px 8px rgba(22,163,74,0.12)" }}
-                                >
-                                    You Save ${savings.toFixed(2)}
-                                </span>
-                            )}
+
+                            {/* Free Shipping Line */}
+                            <div className="flex items-center gap-2 text-navy/70">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+                                    <path d="M15 18H9" />
+                                    <path d="M19 18h2a1 1 0 0 0 1-1v-4.2c0-.8-.6-1.5-1.4-1.5h-1.3l-1.4-2.9C17.6 7.9 17 7.5 16.3 7.5H15" />
+                                    <circle cx="7" cy="18" r="2" />
+                                    <circle cx="17" cy="18" r="2" />
+                                </svg>
+                                <span className="text-xs font-black uppercase tracking-wider">Free 3-4 day shipping</span>
+                            </div>
                         </div>
 
                         {/* Bundle Selector */}
@@ -388,7 +432,7 @@ export default function ProductPage() {
                                             <button
                                                 key={offer.id}
                                                 onClick={() => handleSelectOffer(offer)}
-                                                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all duration-200 relative overflow-hidden"
+                                                className="w-full flex items-center gap-4 px-5 py-4.5 rounded-xl text-left transition-all duration-200 relative overflow-hidden"
                                                 style={isActive
                                                     ? { background: "linear-gradient(135deg, #001F3F 0%, #00325c 100%)", boxShadow: "0 8px 24px rgba(0,31,63,0.22), inset 0 1px 0 rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.07)" }
                                                     : { background: "rgba(255,255,255,0.75)", backdropFilter: "blur(8px)", border: "1px solid rgba(0,31,63,0.08)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }
@@ -403,7 +447,7 @@ export default function ProductPage() {
                                                         ? getImageUrl(offer.featureImageUrl)
                                                         : getImageUrl(product.featureImageUrl);
                                                     return (
-                                                        <div className="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
+                                                        <div className="w-14 h-14 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
                                                             style={isActive ? { background: "rgba(255,255,255,0.1)" } : { background: "rgba(0,31,63,0.04)" }}>
                                                             {thumbSrc ? (
                                                                 <img
@@ -426,11 +470,11 @@ export default function ProductPage() {
 
                                                 {/* Label — left center */}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="font-black text-[13px] leading-snug" style={{ color: isActive ? "#ffffff" : "#001F3F" }}>
+                                                    <p className="font-black text-[15px] leading-snug" style={{ color: isActive ? "#ffffff" : "#001F3F" }}>
                                                         {offer.label}
                                                     </p>
                                                     {offerSavings > 0 && (
-                                                        <p className="text-[9px] font-black uppercase tracking-wider mt-0.5"
+                                                        <p className="text-[10px] font-black uppercase tracking-wider mt-1"
                                                             style={{ color: isActive ? "#86efac" : "#16a34a" }}>
                                                             You Save ${offerSavings.toFixed(2)}
                                                         </p>
@@ -440,22 +484,22 @@ export default function ProductPage() {
                                                 {/* Price block — right aligned */}
                                                 <div className="text-right flex-shrink-0">
                                                     {offer.originalPrice > 0 && (
-                                                        <p className="text-[10px] font-medium line-through leading-none mb-0.5"
+                                                        <p className="text-[11px] font-medium line-through leading-none mb-1"
                                                             style={{ color: isActive ? "rgba(255,255,255,0.35)" : "rgba(0,31,63,0.28)" }}>
                                                             ${offer.originalPrice.toFixed(2)}
                                                         </p>
                                                     )}
-                                                    <p className="text-sm font-black leading-none"
+                                                    <p className="text-base font-black leading-none"
                                                         style={{ color: isActive ? "#ffffff" : "#D32F2F" }}>
                                                         ${offer.discountedPrice.toFixed(2)} USD
                                                     </p>
                                                 </div>
 
                                                 {/* Check indicator */}
-                                                <div className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center ml-1"
+                                                <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center ml-2"
                                                     style={isActive ? { background: "white" } : { border: "2px solid rgba(0,31,63,0.15)" }}>
                                                     {isActive && (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#001F3F" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#001F3F" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                                                             <path d="M20 6 9 17l-5-5" />
                                                         </svg>
                                                     )}
@@ -467,31 +511,33 @@ export default function ProductPage() {
                             </div>
                         )}
 
-                        {/* Buy Now — gradient + shine */}
+                        {/* Buy Now — larger + looping shine */}
                         <div className="space-y-2 pt-1">
                             <button
                                 onClick={handleBuyNow}
-                                className="w-full py-3.5 font-black text-xs uppercase tracking-[0.2em] rounded-xl transition-all duration-300 flex items-center justify-center gap-2.5 group relative overflow-hidden"
-                                style={{ background: "linear-gradient(135deg, #001F3F 0%, #00325c 50%, #001430 100%)", boxShadow: "0 8px 28px rgba(0,31,63,0.28), inset 0 1px 0 rgba(255,255,255,0.1)", color: "white" }}
+                                className="w-full py-5 font-black text-[14px] uppercase tracking-[0.25em] rounded-xl transition-all duration-300 flex items-center justify-center gap-3 group relative overflow-hidden"
+                                style={{ background: "linear-gradient(135deg, #001F3F 0%, #00325c 50%, #001430 100%)", boxShadow: "0 12px 36px rgba(0,31,63,0.3), inset 0 1px 0 rgba(255,255,255,0.12)", color: "white" }}
                                 onMouseEnter={(e) => {
                                     const b = e.currentTarget as HTMLButtonElement;
                                     b.style.background = "linear-gradient(135deg, #D32F2F 0%, #ef4444 50%, #b91c1c 100%)";
-                                    b.style.boxShadow = "0 8px 28px rgba(211,47,47,0.35), inset 0 1px 0 rgba(255,255,255,0.1)";
+                                    b.style.boxShadow = "0 12px 36px rgba(211,47,47,0.38), inset 0 1px 0 rgba(255,255,255,0.12)";
                                 }}
                                 onMouseLeave={(e) => {
                                     const b = e.currentTarget as HTMLButtonElement;
                                     b.style.background = "linear-gradient(135deg, #001F3F 0%, #00325c 50%, #001430 100%)";
-                                    b.style.boxShadow = "0 8px 28px rgba(0,31,63,0.28), inset 0 1px 0 rgba(255,255,255,0.1)";
+                                    b.style.boxShadow = "0 12px 36px rgba(0,31,63,0.3), inset 0 1px 0 rgba(255,255,255,0.12)";
                                 }}
                             >
+                                {/* Looping Shine Overlay */}
                                 <span className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-                                    <span className="absolute top-0 left-[-75%] w-1/2 h-full opacity-20 group-hover:left-[150%] transition-all duration-700 ease-in-out"
-                                        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)", transform: "skewX(-20deg)" }} />
+                                    <span className="absolute top-0 left-0 w-1/3 h-full opacity-30 animate-shine-loop"
+                                        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,1), transparent)" }} />
                                 </span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" x2="21" y1="6" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" />
                                 </svg>
-                                Buy Now
+                                <span>Buy Now</span>
                             </button>
                             <p className="text-center text-[9px] text-navy/25 font-semibold uppercase tracking-widest flex items-center justify-center gap-1.5">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -499,6 +545,14 @@ export default function ProductPage() {
                                 </svg>
                                 Guaranteed Safe &amp; Secure Checkout
                             </p>
+                            {/* Accepted payment methods */}
+                            <div className="flex justify-center pt-1">
+                                <img
+                                    src="/accepted_payment.png"
+                                    alt="Accepted payment methods"
+                                    className="h-12 w-auto object-contain"
+                                />
+                            </div>
                         </div>
 
                         {/* Trust badges */}
@@ -520,45 +574,65 @@ export default function ProductPage() {
                     </div>
                 </div>
 
-                {/* Similar Products */}
-                {product.similarProducts && product.similarProducts.length > 0 && (
-                    <section className="mt-20 pt-12" style={{ borderTop: "1px solid rgba(0,31,63,0.06)" }}>
-                        <div className="flex items-center gap-4 mb-8">
-                            <div className="h-px flex-1" style={{ background: "linear-gradient(to right, transparent, rgba(0,31,63,0.1))" }} />
-                            <div className="text-center">
-                                <p className="text-[9px] font-black text-accent-red uppercase tracking-[0.3em] mb-0.5">Curated For You</p>
-                                <h2 className="text-xl font-black text-navy tracking-tight">You May Also Like</h2>
-                            </div>
-                            <div className="h-px flex-1" style={{ background: "linear-gradient(to left, transparent, rgba(0,31,63,0.1))" }} />
+                {/* Similar Products / Recommended Section */}
+                {((product.similarProducts && product.similarProducts.length > 0) || recommendations.length > 0) && (
+                    <section className="mt-24 pt-12 border-t border-gray-100">
+                        <div className="flex items-center justify-between mb-10">
+                            <h2 className="text-3xl font-black text-navy tracking-tight">
+                                {product.similarProducts && product.similarProducts.length > 0 ? "You may also like" : "Recommended for you"}
+                            </h2>
                         </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {product.similarProducts.map((sp) => {
-                                const spSavings = sp.originalPrice - sp.discountedPrice;
+
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            {(product.similarProducts && product.similarProducts.length > 0 ? product.similarProducts : recommendations).map((sp) => {
+                                const isSale = sp.discountedPrice < sp.originalPrice;
                                 return (
-                                    <Link key={sp.id} href={`/products/${sp.id}`}
-                                        className="group flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
-                                        style={{ background: "rgba(255,255,255,0.8)", backdropFilter: "blur(10px)", border: "1px solid rgba(0,31,63,0.07)", boxShadow: "0 4px 16px rgba(0,31,63,0.05)" }}>
-                                        <div className="relative overflow-hidden" style={{ aspectRatio: "1/1" }}>
-                                            <img src={getImageUrl(sp.featureImageUrl)} alt={sp.title}
-                                                className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
-                                                style={{ filter: "drop-shadow(0 8px 20px rgba(0,31,63,0.1))" }} />
-                                            {spSavings > 0 && (
-                                                <div className="absolute top-2 left-2 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider"
-                                                    style={{ background: "linear-gradient(135deg, #D32F2F, #ef4444)", boxShadow: "0 2px 8px rgba(211,47,47,0.3)" }}>
-                                                    Save ${spSavings.toFixed(2)}
-                                                </div>
+                                    <Link key={sp.id} href={`/products/${sp.id}`} className="group block">
+                                        <div className="relative aspect-square rounded-2xl bg-[#fcfcfc] overflow-hidden mb-5 border border-gray-50 transition-colors group-hover:border-navy/5">
+                                            {/* Sale badge */}
+                                            {isSale && (
+                                                <span className="absolute top-4 right-4 z-20 bg-[#3D5BC9] text-white text-[10px] font-black uppercase tracking-widest px-3.5 py-1.5 rounded-full shadow-lg shadow-[#3D5BC9]/20">
+                                                    Sale
+                                                </span>
                                             )}
-                                        </div>
-                                        <div className="p-3 flex flex-col gap-1.5" style={{ borderTop: "1px solid rgba(0,31,63,0.05)" }}>
-                                            <span className="text-[8px] font-black text-navy/30 uppercase tracking-widest">{sp.category}</span>
-                                            <h3 className="text-[13px] font-black text-navy leading-snug group-hover:text-accent-red transition-colors line-clamp-2">{sp.title}</h3>
-                                            <div className="flex items-center gap-1">
-                                                <StarRating rating={sp.starRating} size={11} />
-                                                <span className="text-[9px] text-navy/30 font-medium">({sp.numberOfReviews})</span>
+
+                                            {/* Image */}
+                                            <div className="absolute inset-0 p-8 flex items-center justify-center pointer-events-none">
+                                                <img
+                                                    src={getImageUrl(sp.featureImageUrl)}
+                                                    alt={sp.title}
+                                                    className="max-w-full max-h-full object-contain group-hover:scale-[1.05] transition-transform duration-700 ease-out"
+                                                />
                                             </div>
-                                            <div className="flex items-baseline gap-1.5">
-                                                <span className="text-sm font-black text-navy">${sp.discountedPrice.toFixed(2)}</span>
-                                                <span className="text-[10px] text-navy/25 line-through">${sp.originalPrice.toFixed(2)}</span>
+
+                                            {/* Hover CTA */}
+                                            <div className="absolute inset-x-0 bottom-0 z-30 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                                                <div className="bg-navy text-white text-[10px] font-black uppercase tracking-[0.2em] py-4 text-center">
+                                                    Quick View →
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Info */}
+                                        <div className="space-y-1.5 px-0.5">
+                                            <h3 className="text-[15px] lg:text-[17px] font-black text-navy leading-snug group-hover:text-accent-red transition-colors duration-200 line-clamp-1">
+                                                {sp.title}
+                                            </h3>
+
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <StarRating rating={sp.starRating || 5} size={12} />
+                                                <span className="text-[11px] font-bold text-navy/30">({sp.numberOfReviews || 0})</span>
+                                            </div>
+
+                                            <div className="flex items-baseline gap-2.5 pt-0.5">
+                                                {sp.originalPrice > sp.discountedPrice && (
+                                                    <span className="text-[13px] font-medium text-navy/20 line-through">
+                                                        ${sp.originalPrice.toFixed(2)} USD
+                                                    </span>
+                                                )}
+                                                <span className="text-sm lg:text-base font-black text-navy">
+                                                    From ${sp.discountedPrice.toFixed(2)} USD
+                                                </span>
                                             </div>
                                         </div>
                                     </Link>

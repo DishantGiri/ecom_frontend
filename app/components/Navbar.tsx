@@ -113,7 +113,7 @@ const Navbar = () => {
 
           {/* Nav Links */}
           <div className="hidden lg:flex items-center space-x-8 xl:space-x-10">
-            {[["Home", "/"], ["All Products", "/products"], ["About us", "/about-us"], ["FAQ", "/faq"], ["Contact", "/contact"]].map(([label, href]) => (
+            {[["Home", "/"], ["All Products", "/products"], ["About us", "/about-us"], ["FAQ", "/#faq"], ["Contact", "/contact"]].map(([label, href]) => (
               <Link key={label} href={href} className="text-sm font-bold text-navy hover:text-accent-red transition-colors">
                 {label}
               </Link>
@@ -123,12 +123,26 @@ const Navbar = () => {
           {/* Utilities */}
           <div className="flex items-center space-x-4 xl:space-x-6">
             {/* Search */}
-            <div className="hidden md:flex items-center relative group">
-              <input type="text" placeholder="Search..." className="pl-4 pr-10 py-2 w-36 xl:w-56 bg-gray-50 border border-gray-100 rounded-full text-xs font-bold text-navy focus:outline-none focus:border-accent-red focus:ring-1 focus:ring-accent-red/20 transition-all placeholder:text-navy/30" />
-              <button className="absolute right-3 text-navy/40 group-focus-within:text-accent-red transition-colors">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const query = (e.currentTarget.elements.namedItem("search") as HTMLInputElement).value;
+                if (query.trim()) {
+                  router.push(`/products?q=${encodeURIComponent(query.trim())}`);
+                }
+              }}
+              className="hidden md:flex items-center relative group"
+            >
+              <input
+                name="search"
+                type="text"
+                placeholder="Search..."
+                className="pl-4 pr-10 py-2 w-36 xl:w-56 bg-gray-50 border border-gray-100 rounded-full text-xs font-bold text-navy focus:outline-none focus:border-accent-red focus:ring-1 focus:ring-accent-red/20 transition-all placeholder:text-navy/30"
+              />
+              <button type="submit" className="absolute right-3 text-navy/40 group-focus-within:text-accent-red transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
               </button>
-            </div>
+            </form>
 
             {/* Currency */}
             <div className="flex items-center space-x-2 px-3 py-2 bg-navy/90 text-white rounded-full cursor-pointer hover:bg-navy transition-all group">
