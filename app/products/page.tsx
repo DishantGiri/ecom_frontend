@@ -34,6 +34,25 @@ function ProductsContent() {
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
+    const CATEGORY_INFO: Record<string, { title: string; description: string }> = {
+        "All": {
+            title: "All Products",
+            description: "Explore our complete range of premium health and wellness solutions, engineered for optimal performance and results."
+        },
+        "Supplements": {
+            title: "Premium Supplements",
+            description: "High-quality oral supplements formulated with clinically proven ingredients for nutritional balance."
+        },
+        "Injectables": {
+            title: "Clinical Injectables",
+            description: "Advanced clinical injectable solutions designed for rapid, targeted therapeutic outcomes."
+        },
+        "Wellness": {
+            title: "Wellness & Lifestyle",
+            description: "Elevate your everyday routine with our top-tier wellness products and longevity therapies."
+        }
+    };
+
     const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
@@ -208,8 +227,20 @@ function ProductsContent() {
                     </div>
                 )}
 
+                {/* ── DYNAMIC CATEGORY HEADER ── */}
+                {!searchParams.get("q") && (
+                    <div className="flex flex-col items-center mb-6 pt-2 text-center max-w-2xl mx-auto animate-in fade-in slide-in-from-top-4 duration-700">
+                        <h1 className="text-3xl md:text-4xl font-black text-navy mb-2 tracking-tight">
+                            {CATEGORY_INFO[filterCategory]?.title || filterCategory}
+                        </h1>
+                        <p className="text-navy/60 font-medium text-base leading-relaxed">
+                            {CATEGORY_INFO[filterCategory]?.description || "Discover our premium selection of medical-grade health products."}
+                        </p>
+                    </div>
+                )}
+
                 {/* ── FILTER BAR ── */}
-                <div className="flex items-center justify-between gap-6 mb-12 py-8 border-b border-gray-100" ref={menuRef}>
+                <div className="flex items-center justify-between gap-6 mb-8 py-4 border-b border-gray-100" ref={menuRef}>
                     <div className="flex items-center gap-10">
                         <span className="text-[14px] font-medium text-navy">Filter:</span>
 

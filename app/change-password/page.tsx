@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Toast from "../components/Toast";
+import toast from "react-hot-toast";
 
 export default function ChangePasswordPage() {
     const router = useRouter();
@@ -10,14 +10,13 @@ export default function ChangePasswordPage() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
-    const [showToast, setShowToast] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (newPassword !== confirmPassword) {
             setStatus("error");
-            setMessage("Passwords do not match.");
+            toast.error("Passwords do not match.");
             return;
         }
 
@@ -41,7 +40,7 @@ export default function ChangePasswordPage() {
 
             if (response.ok) {
                 setStatus("success");
-                setShowToast(true);
+                toast.success("Password updated successfully!");
                 localStorage.setItem("is_auth", "true");
                 setTimeout(() => {
                     window.location.href = "/dashboard";
@@ -49,22 +48,16 @@ export default function ChangePasswordPage() {
             } else {
                 setStatus("error");
                 const data = await response.json();
-                setMessage(data.message || "Failed to update password.");
+                toast.error(data.message || "Failed to update password.");
             }
         } catch (err) {
             setStatus("error");
-            setMessage("Server connection failed.");
+            toast.error("Server connection failed.");
         }
     };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-white z-[9999] font-sans">
-            <Toast
-                show={showToast}
-                message="Password updated successfully!"
-                onClose={() => setShowToast(false)}
-            />
-
             <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,31,63,0.1)] border border-gray-100 animate-in fade-in zoom-in duration-500">
                 <div className="space-y-6">
                     <div className="text-center space-y-2">
@@ -73,12 +66,6 @@ export default function ChangePasswordPage() {
                             Mandatory Password Change
                         </p>
                     </div>
-
-                    {message && status === "error" && (
-                        <div className="p-4 rounded-xl text-xs font-bold uppercase tracking-widest text-center bg-red-50 text-red-600 border border-red-100">
-                            {message}
-                        </div>
-                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">

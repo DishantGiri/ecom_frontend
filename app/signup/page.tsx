@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Toast from "../components/Toast";
+import toast from "react-hot-toast";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -15,7 +15,6 @@ export default function SignupPage() {
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
     const [ip, setIp] = useState("");
-    const [showToast, setShowToast] = useState(false);
 
     // Get user IP on load
     useEffect(() => {
@@ -45,7 +44,7 @@ export default function SignupPage() {
 
         if (!validatePassword(formData.password)) {
             setStatus("error");
-            setMessage("Password must be at least 8 characters long and contain both letters and numbers.");
+            toast.error("Password must be at least 8 characters long and contain both letters and numbers.");
             return;
         }
 
@@ -71,7 +70,7 @@ export default function SignupPage() {
             localStorage.setItem("registered_email", formData.email);
 
             setStatus("success");
-            setShowToast(true);
+            toast.success("Account created! Please login.");
 
             // Redirect after toast shows for a bit
             setTimeout(() => {
@@ -80,18 +79,12 @@ export default function SignupPage() {
 
         } catch (err: any) {
             setStatus("error");
-            setMessage(err.message || "Something went wrong. Please try again.");
+            toast.error(err.message || "Something went wrong. Please try again.");
         }
     };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-white z-[9999] font-sans">
-            <Toast
-                show={showToast}
-                message="Account created! Please login."
-                onClose={() => setShowToast(false)}
-            />
-
             <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,31,63,0.1)] border border-gray-100 animate-in fade-in zoom-in duration-500">
                 <div className="space-y-6">
                     <div className="text-center space-y-2">
@@ -100,12 +93,6 @@ export default function SignupPage() {
                             Elite Fat Loss System | IP: <span className="text-accent-red">{ip || "Detecting..."}</span>
                         </p>
                     </div>
-
-                    {message && status === "error" && (
-                        <div className="p-4 rounded-xl text-xs font-bold uppercase tracking-widest text-center bg-red-50 text-red-600">
-                            {message}
-                        </div>
-                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">

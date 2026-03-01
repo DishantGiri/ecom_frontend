@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useCurrency } from "./CurrencyProvider";
 
 const CURRENCIES = [
@@ -42,6 +42,7 @@ const BANNER_HEIGHT = 40; // px — height of announcement bar
 
 const Navbar = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -107,6 +108,8 @@ const Navbar = () => {
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
 
+  if (pathname?.startsWith("/dashboard")) return null;
+
   return (
     <header className="font-sans w-full">
       {/* ── ANNOUNCEMENT BAR — normal document flow, scrolls away ── */}
@@ -150,7 +153,7 @@ const Navbar = () => {
 
           {/* Nav Links */}
           <div className="hidden lg:flex items-center space-x-8 xl:space-x-10">
-            {[["Home", "/"], ["All Products", "/products"], ["About us", "/about-us"], ["FAQ", "/#faq"], ["Contact", "/contact"]].map(([label, href]) => (
+            {[["All Products", "/products"], ["Blogs", "/blogs"], ["About us", "/about-us"], ["Contact", "/contact"]].map(([label, href]) => (
               <Link key={label} href={href} className="text-sm font-bold text-navy hover:text-accent-red transition-colors">
                 {label}
               </Link>
@@ -185,7 +188,7 @@ const Navbar = () => {
             <div className="relative">
               <div
                 onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
-                className="flex items-center space-x-2 px-3 py-2 bg-navy/90 text-white rounded-full lg:rounded-lg xl:rounded-full cursor-pointer hover:bg-navy transition-all group"
+                className="flex items-center space-x-2 px-4 py-2 bg-navy text-white rounded-xl font-bold text-[13px] cursor-pointer hover:bg-navy-dark transition-all group"
               >
                 <img src={`https://flagcdn.com/w20/${CURRENCIES.find(c => c.code === currency)?.flag || 'us'}.png`} alt={currency} className="w-5 h-auto object-cover rounded-sm" />
                 <span className="text-[13px] font-bold ml-1">{currency} {currencySymbol}</span>
@@ -217,7 +220,7 @@ const Navbar = () => {
             <div className="relative">
               <button
                 onMouseEnter={() => { setIsAccountOpen(true); setIsLoggedIn(!!localStorage.getItem("ecom_token")); }}
-                className="flex items-center space-x-2 px-4 py-1.5 bg-navy text-white rounded-xl font-bold text-[13px] hover:bg-navy-dark transition-all"
+                className="flex items-center space-x-2 px-4 py-2 bg-navy text-white rounded-xl font-bold text-[13px] hover:bg-navy-dark transition-all"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                 <span>{isLoggedIn ? "Account" : "Sign In"}</span>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Toast from "../components/Toast";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -14,12 +14,10 @@ export default function LoginPage() {
     });
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
-    const [showToast, setShowToast] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus("loading");
-        setMessage("");
 
         // If it's a regular user login, we might still want to simulate or use another endpoint
         // But the guide specifically mentions /api/login for Admin
@@ -48,7 +46,7 @@ export default function LoginPage() {
                 document.cookie = `ecom_role=${data.role}; ${cookieOptions}`;
 
                 setStatus("success");
-                setShowToast(true);
+                toast.success("Login successful!");
 
                 setTimeout(() => {
                     if (data.mustChangePassword) {
@@ -69,7 +67,7 @@ export default function LoginPage() {
                 }, 1500);
             } else {
                 setStatus("error");
-                setMessage("Invalid credentials. Please verify your email and password.");
+                toast.error("Invalid credentials. Please verify your email and password.");
             }
         } catch (err) {
             // Fallback for simulation if API is down and not admin
@@ -80,7 +78,7 @@ export default function LoginPage() {
                 if (formData.email === storedEmail && formData.password === storedPassword) {
                     setStatus("success");
                     localStorage.setItem("is_auth", "true");
-                    setShowToast(true);
+                    toast.success("Login successful!");
                     setTimeout(() => {
                         window.location.href = "/";
                     }, 2000);
@@ -88,18 +86,12 @@ export default function LoginPage() {
                 }
             }
             setStatus("error");
-            setMessage("Server connection failed. Please ensure the API is running.");
+            toast.error("Server connection failed. Please ensure the API is running.");
         }
     };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-white z-[9999] font-sans">
-            <Toast
-                show={showToast}
-                message="Login successful!"
-                onClose={() => setShowToast(false)}
-            />
-
             <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,31,63,0.1)] border border-gray-100 animate-in fade-in zoom-in duration-500">
                 <div className="space-y-6">
                     <div className="text-center space-y-2">
@@ -110,12 +102,6 @@ export default function LoginPage() {
                             {isAdmin ? "Management Access Only" : "Access your medical profile"}
                         </p>
                     </div>
-
-                    {message && status === "error" && (
-                        <div className="p-4 rounded-xl text-xs font-bold uppercase tracking-widest text-center bg-red-50 text-red-600 border border-red-100">
-                            {message}
-                        </div>
-                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-2">
@@ -131,7 +117,14 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Password</label>
+                            <div className="flex justify-between items-center">
+                                <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Password</label>
+                                {isAdmin && (
+                                    <Link href="/forgot-password" className="text-[10px] font-bold text-accent-red hover:underline tracking-widest">
+                                        Forgot Password?
+                                    </Link>
+                                )}
+                            </div>
                             <input
                                 type="password"
                                 placeholder="••••••••"
