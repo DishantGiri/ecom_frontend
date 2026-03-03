@@ -31,6 +31,7 @@ interface Product {
     benefits?: string;
     guarantee?: string;
     shippingInfo?: string;
+    sectionOrder?: string[];
     featureImageUrl: string;
     galleryImageUrls: string[];
     promotionalImageUrls?: string[];
@@ -60,6 +61,7 @@ export default function ProductsPage() {
         benefits: "",
         guarantee: "",
         shippingInfo: "",
+        sectionOrder: ["description", "highlights", "directions", "benefits", "guarantee", "shippingInfo"] as string[],
         offers: [] as Offer[]
     });
 
@@ -114,6 +116,29 @@ export default function ProductsPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDragStart = (e: React.DragEvent, sectionKey: string) => {
+        e.dataTransfer.setData("sectionKey", sectionKey);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
+
+    const handleDrop = (e: React.DragEvent, targetSectionKey: string) => {
+        e.preventDefault();
+        const draggedSectionKey = e.dataTransfer.getData("sectionKey");
+        if (draggedSectionKey === targetSectionKey) return;
+
+        const newOrder = [...formData.sectionOrder];
+        const draggedIdx = newOrder.indexOf(draggedSectionKey);
+        const targetIdx = newOrder.indexOf(targetSectionKey);
+
+        newOrder.splice(draggedIdx, 1);
+        newOrder.splice(targetIdx, 0, draggedSectionKey);
+
+        setFormData({ ...formData, sectionOrder: newOrder });
     };
 
     const handleDelete = async (id: number) => {
@@ -290,6 +315,7 @@ export default function ProductsPage() {
             benefits: "",
             guarantee: "",
             shippingInfo: "",
+            sectionOrder: ["description", "highlights", "directions", "benefits", "guarantee", "shippingInfo"],
             offers: []
         });
         setFeatureImage(null);
@@ -317,6 +343,9 @@ export default function ProductsPage() {
             benefits: product.benefits || "",
             guarantee: product.guarantee || "",
             shippingInfo: product.shippingInfo || "",
+            sectionOrder: (product.sectionOrder && product.sectionOrder.length > 0)
+                ? product.sectionOrder
+                : ["description", "highlights", "directions", "benefits", "guarantee", "shippingInfo"],
             offers: product.offers
         });
         setExistingGalleryImages(product.galleryImageUrls || []);
@@ -343,6 +372,10 @@ export default function ProductsPage() {
                     <Link href="/dashboard/blogs" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" /><path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" /></svg>
                         <span className="text-sm font-black uppercase tracking-widest text-[10px]">Blogs</span>
+                    </Link>
+                    <Link href="/dashboard/analytics" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
+                        <span className="text-sm font-black uppercase tracking-widest text-[10px]">Click Tracking</span>
                     </Link>
                     <Link href="/dashboard/settings" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
@@ -554,65 +587,74 @@ export default function ProductsPage() {
                                         />
                                         <p className="text-[9px] text-navy/30 font-bold uppercase tracking-widest ml-1">This link opens when a customer clicks "Buy Now" on the product page</p>
                                     </div>
-                                    <div className="col-span-2 space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Description</label>
-                                        <textarea
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                            rows={4}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="Enter product description (supports multiple lines)"
-                                        ></textarea>
+                                </div>
+
+                                {/* ── Content Sections (Draggable) ── */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-3">
+                                                <span className="w-8 h-px bg-navy/10"></span>
+                                                Product Content
+                                            </h4>
+                                            <p className="text-[10px] font-bold text-navy/30 uppercase tracking-widest mt-1 ml-11">Fill in content below · Drag cards to reorder sections on the product page</p>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-navy/5 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-navy/40"><path d="M7 15l5 5 5-5" /><path d="M7 9l5-5 5 5" /></svg>
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-navy/40">Drag to Reorder</span>
+                                        </div>
                                     </div>
-                                    <div className="col-span-2 space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Highlights</label>
-                                        <textarea
-                                            value={formData.highlights}
-                                            onChange={(e) => setFormData({ ...formData, highlights: e.target.value })}
-                                            rows={4}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="Enter highlights (one per line, e.g., 🧠 Supports healthy nerve function)"
-                                        ></textarea>
-                                    </div>
-                                    <div className="col-span-2 md:col-span-1 space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Directions</label>
-                                        <textarea
-                                            value={formData.directions}
-                                            onChange={(e) => setFormData({ ...formData, directions: e.target.value })}
-                                            rows={4}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="Enter directions"
-                                        ></textarea>
-                                    </div>
-                                    <div className="col-span-2 md:col-span-1 space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Benefits</label>
-                                        <textarea
-                                            value={formData.benefits}
-                                            onChange={(e) => setFormData({ ...formData, benefits: e.target.value })}
-                                            rows={4}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="Enter benefits"
-                                        ></textarea>
-                                    </div>
-                                    <div className="col-span-2 md:col-span-1 space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Guarantee Info</label>
-                                        <textarea
-                                            value={formData.guarantee}
-                                            onChange={(e) => setFormData({ ...formData, guarantee: e.target.value })}
-                                            rows={4}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="Enter money back guarantee text"
-                                        ></textarea>
-                                    </div>
-                                    <div className="col-span-2 md:col-span-1 space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Shipping Info</label>
-                                        <textarea
-                                            value={formData.shippingInfo}
-                                            onChange={(e) => setFormData({ ...formData, shippingInfo: e.target.value })}
-                                            rows={4}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="Enter shipping information"
-                                        ></textarea>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {formData.sectionOrder.map((sectionKey, idx) => {
+                                            const meta: any = {
+                                                description: { label: "Description", placeholder: "Enter product description (supports multiple lines)", fullWidth: true, emoji: "📝" },
+                                                highlights: { label: "Highlights", placeholder: "Enter highlights (one per line, e.g., 🧠 Supports healthy nerve function)", fullWidth: true, emoji: "✨" },
+                                                directions: { label: "Directions", placeholder: "Enter how to use the product", fullWidth: false, emoji: "📋" },
+                                                benefits: { label: "Benefits", placeholder: "Enter product benefits", fullWidth: false, emoji: "💪" },
+                                                guarantee: { label: "Guarantee", placeholder: "Enter money back guarantee text", fullWidth: false, emoji: "🛡️" },
+                                                shippingInfo: { label: "Shipping Info", placeholder: "Enter shipping information", fullWidth: false, emoji: "🚚" },
+                                            };
+
+                                            const section = meta[sectionKey];
+                                            if (!section) return null;
+
+                                            return (
+                                                <div
+                                                    key={sectionKey}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, sectionKey)}
+                                                    onDragOver={handleDragOver}
+                                                    onDrop={(e) => handleDrop(e, sectionKey)}
+                                                    className={`${section.fullWidth ? 'col-span-2' : 'col-span-2 md:col-span-1'
+                                                        } space-y-3 p-5 bg-gray-50/80 border-2 border-dashed border-gray-200 hover:border-navy/20 hover:bg-white active:border-accent-red/30 active:bg-accent-red/5 transition-all rounded-3xl cursor-grab active:cursor-grabbing group/section relative`}
+                                                >
+                                                    {/* Drag handle + label row */}
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Priority badge */}
+                                                            <span className="w-5 h-5 rounded-full bg-navy text-white text-[9px] font-black flex items-center justify-center flex-shrink-0">{idx + 1}</span>
+                                                            <span className="text-sm">{section.emoji}</span>
+                                                            <label className="text-[10px] font-black text-navy uppercase tracking-widest cursor-grab">{section.label}</label>
+                                                        </div>
+                                                        {/* Drag grip icon */}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-navy/30 flex-shrink-0">
+                                                            <circle cx="9" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="19" r="1" />
+                                                            <circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" />
+                                                        </svg>
+                                                    </div>
+                                                    <textarea
+                                                        value={(formData as any)[sectionKey] || ""}
+                                                        onChange={(e) => setFormData({ ...formData, [sectionKey]: e.target.value })}
+                                                        rows={sectionKey === 'description' || sectionKey === 'highlights' ? 5 : 3}
+                                                        className="w-full bg-white border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-navy/20 transition-all shadow-sm resize-none"
+                                                        placeholder={section.placeholder}
+                                                        onDragStart={(e) => e.stopPropagation()}
+                                                        draggable={false}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 

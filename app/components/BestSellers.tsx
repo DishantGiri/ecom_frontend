@@ -4,6 +4,8 @@ import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCurrency } from "./CurrencyProvider";
+import { trackProductClick } from "../utils/tracking";
+import { apiFetch } from "../utils/apiFetch";
 
 
 const CARDS_PER_PAGE = 4;
@@ -31,17 +33,9 @@ export default function BestSellers() {
 
     useEffect(() => {
         const fetchProducts = async () => {
-            try {
-                const response = await fetch(`${apiHost}/api/products/popular?currency=${currency}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setProducts(data.slice(0, 8));
-                }
-            } catch (error) {
-                console.error("Error fetching products:", error);
-            } finally {
-                setLoading(false);
-            }
+            const data = await apiFetch<any[]>(`${apiHost}/api/products/popular?currency=${currency}`);
+            if (data) setProducts(data.slice(0, 8));
+            setLoading(false);
         };
         fetchProducts();
     }, [apiHost, currency]);
@@ -137,6 +131,7 @@ export default function BestSellers() {
                             href={product.id ? `/products/${product.id}` : '#'}
                             className="flex-shrink-0 w-[calc(25%-18px)] min-w-[240px] group cursor-pointer block"
                             style={{ scrollSnapAlign: "start" }}
+                            onClick={() => product.id && trackProductClick(product.id)}
                         >
                             {/* Image area — square ratio, no border, no shadow */}
                             <div className="relative w-full aspect-square rounded-2xl bg-white mb-5 overflow-hidden">

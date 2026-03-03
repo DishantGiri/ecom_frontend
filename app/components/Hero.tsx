@@ -42,19 +42,19 @@ const Hero = () => {
                 {/* CTAs */}
                 <div className="flex flex-wrap gap-3 mb-12">
                     <Link
-                        href="/signup"
+                        href="/products"
                         className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent-red text-white text-[13px] font-black uppercase tracking-widest rounded-xl hover:bg-white hover:text-navy transition-all duration-300 shadow-lg shadow-accent-red/25 group"
                     >
-                        Get Started
+                        Explore Now
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform duration-300">
                             <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
                         </svg>
                     </Link>
                     <Link
-                        href="/consultation"
+                        href="/blogs"
                         className="inline-flex items-center px-7 py-3.5 border border-white/20 text-white/80 hover:border-white hover:text-white text-[13px] font-black uppercase tracking-widest rounded-xl transition-all duration-300"
                     >
-                        Free Consultation
+                        Read Blogs
                     </Link>
                 </div>
 

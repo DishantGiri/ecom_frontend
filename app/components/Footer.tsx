@@ -27,7 +27,7 @@ export default function Footer() {
                     <div>
                         <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-8 text-accent-red">Shop</h4>
                         <ul className="space-y-5">
-                            {["Weight Management", "Injectables", "Elite Supplements", "Performance Labs"].map((item) => (
+                            {["All Products", "Latest Product", "Most Popular"].map((item) => (
                                 <li key={item}>
                                     <Link href="/products" className="text-white/60 hover:text-white transition-colors text-sm font-bold tracking-tight">
                                         {item}
@@ -38,11 +38,11 @@ export default function Footer() {
                     </div>
 
                     <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-8 text-accent-red">Company</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-8 text-accent-red">Navigation</h4>
                         <ul className="space-y-5">
-                            {["Our Story", "The Science", "Wholesale", "Contact Us"].map((item) => (
+                            {["Home", "Products", "Blog", "Contact Us"].map((item) => (
                                 <li key={item}>
-                                    <Link href="#" className="text-white/60 hover:text-white transition-colors text-sm font-bold tracking-tight">
+                                    <Link href={item === "Home" ? "/" : item === "Products" ? "/products" : item === "Blog" ? "/blogs" : "#"} className="text-white/60 hover:text-white transition-colors text-sm font-bold tracking-tight">
                                         {item}
                                     </Link>
                                 </li>
@@ -51,9 +51,9 @@ export default function Footer() {
                     </div>
 
                     <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-8 text-accent-red">Support</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] mb-8 text-accent-red">Legal</h4>
                         <ul className="space-y-5">
-                            {["Shipping Policy", "Return Policy", "Quality Testing", "Help Center"].map((item) => (
+                            {["Privacy Policy", "Terms of Service", "Shipping Policy", "Return Policy"].map((item) => (
                                 <li key={item}>
                                     <Link href="#" className="text-white/60 hover:text-white transition-colors text-sm font-bold tracking-tight">
                                         {item}
@@ -65,10 +65,19 @@ export default function Footer() {
                 </div>
 
                 <div className="pt-12 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-8 text-[11px] font-black text-white/30 uppercase tracking-[0.2em]">
-                    <p>© {currentYear} LOREM INDUSTRIES. ALL RIGHTS RESERVED.</p>
-                    <div className="flex items-center gap-10">
-                        <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+                    <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                        <p>© {currentYear} LOREM INDUSTRIES. ALL RIGHTS RESERVED.</p>
+                        <div className="flex items-center gap-10">
+                            <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
+                            <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+                        </div>
+                    </div>
+                    <div className="opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                        <img
+                            src="/accepted_payment.png"
+                            alt="Accepted Payment Methods"
+                            className="h-8 md:h-10 w-auto object-contain"
+                        />
                     </div>
                 </div>
             </div>

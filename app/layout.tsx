@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { CurrencyProvider } from "./components/CurrencyProvider";
 import ToasterProvider from "./components/ToasterProvider";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +35,11 @@ export default function RootLayout({
         <CurrencyProvider>
           <ToasterProvider />
           <Navbar />
-          <main>
-            {children}
-          </main>
+          <ErrorBoundary>
+            <main>
+              {children}
+            </main>
+          </ErrorBoundary>
           <Footer />
         </CurrencyProvider>
       </body>

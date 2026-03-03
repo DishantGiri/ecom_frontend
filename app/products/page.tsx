@@ -4,6 +4,9 @@ import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCurrency } from "../components/CurrencyProvider";
+import { trackProductClick } from "../utils/tracking";
+import { apiFetch } from "../utils/apiFetch";
+
 
 const StarRating = ({ rating }: { rating: number }) => (
     <div className="flex items-center gap-0.5">
@@ -73,39 +76,22 @@ function ProductsContent() {
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
-            try {
-                const query = searchParams.get("q");
-                let url = `${apiHost}/api/products?currency=${currency}`;
-
-                if (query) {
-                    url = `${apiHost}/api/products/search?keyword=${encodeURIComponent(query)}&currency=${currency}`;
-                }
-
-                const response = await fetch(url);
-                if (response.ok) {
-                    const data = await response.json();
-                    setProducts(data);
-                }
-            } catch (error) {
-                console.error("Error fetching products:", error);
-            } finally {
-                setLoading(false);
+            const query = searchParams.get("q");
+            let url = `${apiHost}/api/products?currency=${currency}`;
+            if (query) {
+                url = `${apiHost}/api/products/search?keyword=${encodeURIComponent(query)}&currency=${currency}`;
             }
+            const data = await apiFetch<any[]>(url);
+            if (data) setProducts(data);
+            setLoading(false);
         };
         fetchProducts();
     }, [apiHost, searchParams, currency]);
 
     useEffect(() => {
         const fetchRecommendations = async () => {
-            try {
-                const response = await fetch(`${apiHost}/api/products?currency=${currency}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    setRecommendations(data.slice(0, 4));
-                }
-            } catch (error) {
-                console.error("Error fetching recommendations:", error);
-            }
+            const data = await apiFetch<any[]>(`${apiHost}/api/products?currency=${currency}`);
+            if (data) setRecommendations(data.slice(0, 4));
         };
         fetchRecommendations();
     }, [apiHost, currency]);
@@ -441,6 +427,7 @@ function ProductsContent() {
                                 href={`/products/${product.id}`}
                                 key={product.id}
                                 className="group block"
+                                onClick={() => trackProductClick(product.id)}
                             >
                                 <div className="relative aspect-square rounded-2xl bg-[#fcfcfc] overflow-hidden mb-5 border border-gray-50 transition-colors group-hover:border-navy/5">
                                     {/* Sale badge */}
@@ -531,6 +518,7 @@ function ProductsContent() {
                                     href={`/products/${product.id}`}
                                     key={`rec-${product.id}`}
                                     className="group block"
+                                    onClick={() => trackProductClick(product.id)}
                                 >
                                     <div className="relative aspect-square rounded-2xl bg-[#fcfcfc] overflow-hidden mb-5 border border-gray-50 transition-colors group-hover:border-navy/5">
                                         {product.discountedPrice < product.originalPrice && (
