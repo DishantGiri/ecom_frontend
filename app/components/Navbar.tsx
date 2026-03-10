@@ -305,7 +305,7 @@ const Navbar = () => {
               </div>
 
               {/* Account Dropdown */}
-              <div className="relative flex-shrink-0">
+              <div className="relative flex-shrink-0" onMouseLeave={() => setIsAccountOpen(false)}>
                 <button
                   onClick={() => { setIsAccountOpen(!isAccountOpen); setIsCurrencyOpen(false); setIsLanguageOpen(false); }}
                   onMouseEnter={() => { setIsAccountOpen(true); setIsLoggedIn(isLoggedInFromCookie()); setIsCurrencyOpen(false); setIsLanguageOpen(false); }}
@@ -314,6 +314,37 @@ const Navbar = () => {
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                   <span className="text-[11px] font-black">{isLoggedIn ? "Account" : "Sign In"}</span>
                 </button>
+
+                {/* Dropdown Panel */}
+                {isAccountOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl shadow-navy/10 z-[200] overflow-hidden">
+                    <div className="p-5 space-y-3">
+                      {isLoggedIn ? (
+                        <>
+                          <p className="text-[11px] font-black text-navy/40 uppercase tracking-[0.15em]">Your Account</p>
+                          <Link href="/change-password" onClick={() => setIsAccountOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-navy/40 group-hover:text-navy transition-colors"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                            <span className="text-[13px] font-bold text-navy">Change Password</span>
+                          </Link>
+                          <button onClick={handleLogout} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 transition-colors group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-400"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></svg>
+                            <span className="text-[13px] font-bold text-red-500">Logout</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-[11px] font-black text-navy/40 uppercase tracking-[0.15em]">Welcome</p>
+                          <Link href="/login" onClick={() => setIsAccountOpen(false)} className="block w-full py-3 text-center bg-navy text-white font-black text-xs uppercase tracking-[0.15em] rounded-xl hover:bg-navy/90 transition-all active:scale-[0.98]">
+                            Sign In
+                          </Link>
+                          <Link href="/signup" onClick={() => setIsAccountOpen(false)} className="block w-full py-3 text-center border border-navy/20 text-navy font-black text-xs uppercase tracking-[0.15em] rounded-xl hover:bg-gray-50 transition-all active:scale-[0.98]">
+                            Create Account
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
