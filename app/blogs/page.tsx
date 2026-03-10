@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 
+export const dynamic = "force-dynamic";
+
 interface Blog {
     id: number;
     title: string;
@@ -26,11 +28,10 @@ function getImageUrl(url: string): string {
 
 async function getBlogs(): Promise<Blog[]> {
     try {
-        const res = await fetch(`${apiHost}/api/blogs`, {
-            next: { revalidate: 60 } // Revalidate every 60 seconds
-        });
+        const res = await fetch(`${apiHost}/api/blogs`, { cache: "no-store" });
         if (!res.ok) return [];
-        return res.json();
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return []; }
     } catch (e) {
         console.error("Failed to fetch blogs", e);
         return [];
