@@ -41,9 +41,9 @@ export default function NewArrivals() {
     }, [apiHost, currency]);
 
     const getImageUrl = (url: string) => {
-        if (!url) return "/hero1.png"; // Fallback to a valid public image
-        if (url.startsWith("http")) return url;
-        return `${apiHost}/api/images/${url}`;
+        if (!url) return "/hero1.png";
+        const full = url.startsWith("http") ? url : `${apiHost}/api/images/${url}`;
+        return full.replace(/([^:])\/\/+/g, '$1/');
     };
 
     const totalPages = Math.ceil(products.length / CARDS_PER_PAGE);

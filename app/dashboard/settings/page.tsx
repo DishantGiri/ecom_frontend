@@ -188,8 +188,8 @@ export default function SettingsPage() {
 
     const getImageUrl = (url?: string) => {
         if (!url) return "";
-        if (url.startsWith("http")) return url;
-        return `${apiHost}/api/images/${url}`;
+        const full = url.startsWith("http") ? url : `${apiHost}/api/images/${url}`;
+        return full.replace(/([^:])\/\/+/g, '$1/');
     };
 
     return (

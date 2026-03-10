@@ -111,8 +111,8 @@ export default function ProductsPage() {
 
     const getImageUrl = (url: string) => {
         if (!url) return "";
-        if (url.startsWith("http")) return url;
-        return `${apiHost}/api/images/${url}`;
+        const full = url.startsWith("http") ? url : `${apiHost}/api/images/${url}`;
+        return full.replace(/([^:])\/\/+/g, '$1/');
     };
 
     const fetchProducts = async () => {

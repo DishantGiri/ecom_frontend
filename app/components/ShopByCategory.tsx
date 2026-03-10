@@ -47,7 +47,7 @@ export default function ShopByCategory() {
                     const formattedCategories = catsRes.map((c) => ({
                         category_name: c.name,
                         product_count: counts[c.name] || 0,
-                        imageUrl: c.imageUrl
+                        imageUrl: c.imageUrl ? c.imageUrl.replace(/([^:])\/\/+/g, '$1/') : undefined
                     }));
                     setCategories(formattedCategories.slice(0, 4));
                 } else if (prodsRes) {

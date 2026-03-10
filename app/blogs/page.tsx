@@ -20,8 +20,8 @@ const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://209.126.86.149:8083"
 
 function getImageUrl(url: string): string {
     if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return `${apiHost}/api/images/${url}`;
+    const full = url.startsWith("http") ? url : `${apiHost}/api/images/${url}`;
+    return full.replace(/([^:])\/\/+/g, '$1/');
 }
 
 async function getBlogs(): Promise<Blog[]> {
