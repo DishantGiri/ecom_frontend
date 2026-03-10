@@ -384,6 +384,36 @@ export default function ProductPage() {
     return (
         <main className="min-h-screen font-sans" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 40%, #f1f5f9 100%)" }}>
 
+            {/* JSON-LD Product Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Product",
+                        "name": product.title,
+                        "image": getImageUrl(product.featureImageUrl),
+                        "description": product.description?.replace(/<[^>]+>/g, "") || product.title,
+                        "sku": String(product.id),
+                        "brand": { "@type": "Brand", "name": "Lively Vita" },
+                        "aggregateRating": product.numberOfReviews > 0 ? {
+                            "@type": "AggregateRating",
+                            "ratingValue": product.starRating,
+                            "reviewCount": product.numberOfReviews
+                        } : undefined,
+                        "offers": {
+                            "@type": "Offer",
+                            "url": typeof window !== "undefined" ? window.location.href : "",
+                            "priceCurrency": currency,
+                            "price": product.discountedPrice,
+                            "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+                            "availability": "https://schema.org/InStock",
+                            "seller": { "@type": "Organization", "name": "Lively Vita" }
+                        }
+                    })
+                }}
+            />
+
             {/* Breadcrumb */}
             <div style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(0,31,63,0.06)" }}>
                 <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-2.5 flex items-center gap-2 text-[10px] font-semibold text-navy/35 uppercase tracking-wider">

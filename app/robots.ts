@@ -1,0 +1,18 @@
+import type { MetadataRoute } from "next";
+
+const siteUrl = (
+    process.env.NEXT_PUBLIC_SITE_URL || "http://209.126.86.149:3083"
+).replace(/\/+$/, "");
+
+export default function robots(): MetadataRoute.Robots {
+    return {
+        rules: [
+            {
+                userAgent: "*",
+                allow: "/",
+                disallow: ["/dashboard/", "/dashboard"],
+            },
+        ],
+        sitemap: `${siteUrl}/sitemap.xml`,
+    };
+}

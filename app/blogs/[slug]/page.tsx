@@ -94,6 +94,40 @@ export default function BlogDetailsPage() {
     return (
         <div className="min-h-screen bg-white font-sans">
 
+            {/* JSON-LD Blog Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "BlogPosting",
+                        "headline": blog.metaTitle || blog.title,
+                        "description": blog.metaDescription || blog.intro,
+                        "image": getImageUrl(blog.featureImageUrl),
+                        "author": {
+                            "@type": "Person",
+                            "name": blog.author || "Lively Vita"
+                        },
+                        "publisher": {
+                            "@type": "Organization",
+                            "name": "Lively Vita",
+                            "logo": {
+                                "@type": "ImageObject",
+                                "url": `${typeof window !== "undefined" ? window.location.origin : ""}/logo.png`
+                            }
+                        },
+                        "datePublished": blog.createdAt,
+                        "dateModified": blog.updatedAt || blog.createdAt,
+                        "mainEntityOfPage": {
+                            "@type": "WebPage",
+                            "@id": typeof window !== "undefined" ? window.location.href : ""
+                        },
+                        "keywords": blog.metaKeywords || "",
+                        "articleBody": blog.content?.replace(/<[^>]+>/g, "") || ""
+                    })
+                }}
+            />
+
             {/* ── STICKY TOP NAV ── */}
             <div className="sticky top-0 z-50 bg-white border-b border-gray-100">
                 <div className="max-w-[960px] mx-auto px-4 py-3 flex items-center gap-2 text-[11px] text-gray-400 font-medium">
