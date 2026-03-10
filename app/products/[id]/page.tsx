@@ -408,7 +408,42 @@ export default function ProductPage() {
                             "price": product.discountedPrice,
                             "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
                             "availability": "https://schema.org/InStock",
-                            "seller": { "@type": "Organization", "name": "Lively Vita" }
+                            "seller": { "@type": "Organization", "name": "Lively Vita" },
+                            "shippingDetails": {
+                                "@type": "OfferShippingDetails",
+                                "shippingRate": {
+                                    "@type": "MonetaryAmount",
+                                    "value": "0",
+                                    "currency": currency
+                                },
+                                "shippingDestination": {
+                                    "@type": "DefinedRegion",
+                                    "addressCountry": "US"
+                                },
+                                "deliveryTime": {
+                                    "@type": "ShippingDeliveryTime",
+                                    "handlingTime": {
+                                        "@type": "QuantitativeValue",
+                                        "minValue": 1,
+                                        "maxValue": 2,
+                                        "unitCode": "DAY"
+                                    },
+                                    "transitTime": {
+                                        "@type": "QuantitativeValue",
+                                        "minValue": 3,
+                                        "maxValue": 7,
+                                        "unitCode": "DAY"
+                                    }
+                                }
+                            },
+                            "hasMerchantReturnPolicy": {
+                                "@type": "MerchantReturnPolicy",
+                                "applicableCountry": "US",
+                                "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+                                "merchantReturnDays": 30,
+                                "returnMethod": "https://schema.org/ReturnByMail",
+                                "returnFees": "https://schema.org/FreeReturn"
+                            }
                         }
                     })
                 }}
