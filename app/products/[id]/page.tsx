@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { trackProductClick } from "../../utils/tracking";
 import { useCurrency } from "../../components/CurrencyProvider";
 import { apiFetch } from "../../utils/apiFetch";
+import { apiHost } from "../../utils/apiHost";
 import ScrollReveal from "../../components/ScrollReveal";
 
 
@@ -42,8 +43,6 @@ interface Product {
     offers: Offer[];
     similarProducts: Product[] | null;
 }
-
-const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
 function getImageUrl(url: string): string {
     if (!url) return "";

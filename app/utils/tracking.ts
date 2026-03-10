@@ -1,3 +1,5 @@
+import { apiHost } from "./apiHost";
+
 export async function getUserIP() {
     try {
         const response = await fetch('https://api.ipify.org?format=json');
@@ -11,7 +13,6 @@ export async function getUserIP() {
 
 export async function getCountryByIP(ip: string) {
     try {
-        const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
         const response = await fetch(`${apiHost}/api/track/country?ipAddress=${ip}`);
         const data = await response.json();
         return data.country;
@@ -26,8 +27,6 @@ export async function trackProductClick(productId: number | string) {
 
     const ip = await getUserIP();
     if (!ip) return; // Don't track if IP failed
-
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     try {
         await fetch(`${apiHost}/api/track/click`, {

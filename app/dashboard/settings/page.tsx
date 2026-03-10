@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../../utils/auth";
+import { apiHost } from "../../utils/apiHost";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -17,8 +18,6 @@ export default function SettingsPage() {
     const [emailData, setEmailData] = useState({ newEmail: "", password: "" });
     const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "" });
     const [loading, setLoading] = useState(false);
-
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     const fetchCategories = async () => {
         try {

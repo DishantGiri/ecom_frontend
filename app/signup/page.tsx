@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { apiHost } from "../utils/apiHost";
 
 export default function SignupPage() {
     const router = useRouter();
@@ -49,8 +50,6 @@ export default function SignupPage() {
         }
 
         try {
-            const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
-
             const response = await fetch(`${apiHost}/api/register`, {
                 method: "POST",
                 headers: {

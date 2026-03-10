@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../../utils/auth";
+import { apiHost } from "../../utils/apiHost";
 
 interface ClickStats {
     productTitle: string;
@@ -16,7 +17,6 @@ export default function AnalyticsPage() {
     const router = useRouter();
     const [stats, setStats] = useState<ClickStats[]>([]);
     const [loading, setLoading] = useState(true);
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
         const checkAccess = () => {

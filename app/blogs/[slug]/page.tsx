@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ShareButtons from "./ShareButtons";
+import { apiHost } from "../../utils/apiHost";
 
 interface Blog {
     id: number;
@@ -20,12 +21,10 @@ interface Blog {
     updatedAt: string;
 }
 
-const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
-
 function getImageUrl(url: string): string {
     if (!url) return "";
-    if (url.startsWith("http")) return url;
-    return `${apiHost}/api/images/${url}`;
+    const full = url.startsWith("http") ? url : `${apiHost}/api/images/${url}`;
+    return full.replace(/([^:])\/\/+/g, '$1/');
 }
 
 function decodeHtml(html: string): string {

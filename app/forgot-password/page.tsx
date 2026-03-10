@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { apiHost } from "../utils/apiHost";
 
 export default function ForgotPasswordPage() {
     const router = useRouter();
@@ -14,8 +15,6 @@ export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
-
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     const handleRequestOTP = async (e: React.FormEvent) => {
         e.preventDefault();

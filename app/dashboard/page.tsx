@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../utils/auth";
+import { apiHost } from "../utils/apiHost";
 
 interface Offer {
     id?: number;
@@ -72,8 +73,6 @@ export default function ProductsPage() {
     const [existingGalleryImages, setExistingGalleryImages] = useState<string[]>([]);
     const [existingPromotionalImages, setExistingPromotionalImages] = useState<string[]>([]);
     const [offerImages, setOfferImages] = useState<Record<number, File>>({});
-
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
         // Fetch categories for the dropdowns

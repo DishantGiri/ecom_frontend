@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getTokenFromCookie } from "../utils/auth";
+import { apiHost } from "../utils/apiHost";
 
 export default function ChangePasswordPage() {
     const router = useRouter();
@@ -25,7 +26,6 @@ export default function ChangePasswordPage() {
         setMessage("");
 
         try {
-            const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
             const token = getTokenFromCookie();
 
             const response = await fetch(`${apiHost}/api/change-password`, {

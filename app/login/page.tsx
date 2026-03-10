@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { setAuthCookies } from "../utils/auth";
+import { apiHost } from "../utils/apiHost";
 
 function LoginForm() {
     const router = useRouter();
@@ -32,7 +33,6 @@ function LoginForm() {
         // If it's a regular user login, we might still want to simulate or use another endpoint
         // But the guide specifically mentions /api/login for Admin
         try {
-            const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
             const response = await fetch(`${apiHost}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { apiHost } from "../utils/apiHost";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +18,6 @@ interface Blog {
     createdAt: string;
     updatedAt: string;
 }
-
-const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://209.126.86.149:8083";
 
 function getImageUrl(url: string): string {
     if (!url) return "";

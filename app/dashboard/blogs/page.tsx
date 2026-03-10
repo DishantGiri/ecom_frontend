@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import dynamic from 'next/dynamic';
 import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../../utils/auth";
+import { apiHost } from "../../utils/apiHost";
 import 'react-quill-new/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -43,7 +44,6 @@ export default function BlogsPage() {
     });
 
     const [featureImage, setFeatureImage] = useState<File | null>(null);
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
         const checkAccess = () => {

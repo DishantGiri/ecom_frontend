@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../utils/apiFetch";
+import { apiHost } from "../utils/apiHost";
 
 interface CategoryInfo {
     category_name: string;
@@ -22,8 +23,6 @@ const CATEGORY_IMAGES: Record<string, string> = {
 export default function ShopByCategory() {
     const [categories, setCategories] = useState<CategoryInfo[]>([]);
     const [loading, setLoading] = useState(true);
-
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
         const fetchData = async () => {

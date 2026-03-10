@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCurrency } from "./CurrencyProvider";
 import { trackProductClick } from "../utils/tracking";
 import { apiFetch } from "../utils/apiFetch";
+import { apiHost } from "../utils/apiHost";
 
 
 const CARDS_PER_PAGE = 4;
@@ -28,8 +29,6 @@ export default function BestSellers() {
     const [loading, setLoading] = useState(true);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [page, setPage] = useState(0);
-
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
         const fetchProducts = async () => {

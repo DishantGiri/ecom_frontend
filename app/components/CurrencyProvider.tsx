@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { apiHost } from "../utils/apiHost";
 
 
 interface CurrencyContextType {
@@ -56,7 +57,6 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
                 ]) as Response;
                 const { ip } = await ipRes.json();
 
-                const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
                 const countryRes = await Promise.race([
                     fetch(`${apiHost}/api/track/country?ipAddress=${ip}`),
                     new Promise<null>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000))

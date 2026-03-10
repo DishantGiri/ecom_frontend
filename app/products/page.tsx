@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useCurrency } from "../components/CurrencyProvider";
 
 import { apiFetch } from "../utils/apiFetch";
+import { apiHost } from "../utils/apiHost";
 
 
 const StarRating = ({ rating }: { rating: number }) => (
@@ -52,8 +53,6 @@ function ProductsContent() {
             description: "Elevate your everyday routine with our top-tier wellness products and longevity therapies."
         }
     };
-
-    const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
         const cat = searchParams.get("category");
