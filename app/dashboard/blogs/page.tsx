@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import dynamic from 'next/dynamic';
+import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../../utils/auth";
 import 'react-quill-new/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -46,11 +47,7 @@ export default function BlogsPage() {
 
     useEffect(() => {
         const checkAccess = () => {
-            const token = localStorage.getItem("ecom_token");
-            const role = localStorage.getItem("ecom_role")?.trim().toUpperCase();
-            const isAdmin = role === "ROLE_ADMIN" || role === "ADMIN";
-
-            if (!token || !isAdmin) {
+            if (!getTokenFromCookie() || !isAdminFromCookie()) {
                 router.push("/login");
                 return false;
             }
@@ -70,7 +67,7 @@ export default function BlogsPage() {
 
     const fetchBlogs = async () => {
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const response = await fetch(`${apiHost}/api/admin/blogs`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -92,7 +89,7 @@ export default function BlogsPage() {
 
         const loadingToast = toast.loading("Deleting blog...");
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const response = await fetch(`${apiHost}/api/admin/blogs/${id}`, {
                 method: "DELETE",
                 headers: {
@@ -117,7 +114,7 @@ export default function BlogsPage() {
 
         const loadingToast = toast.loading(editingBlog ? "Updating blog..." : "Creating blog...");
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const form = new FormData();
 
             form.append("data", JSON.stringify(formData));
@@ -217,9 +214,7 @@ export default function BlogsPage() {
                 </nav>
 
                 <button onClick={() => {
-                    localStorage.clear();
-                    document.cookie = "ecom_token=; path=/; max-age=0";
-                    document.cookie = "ecom_role=; path=/; max-age=0";
+                    clearAuthCookies();
                     router.push("/login");
                 }} className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all">
                     Logout

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../../utils/auth";
 
 export default function SettingsPage() {
     const router = useRouter();
@@ -21,16 +22,13 @@ export default function SettingsPage() {
 
     const fetchCategories = async () => {
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const response = await fetch(`${apiHost}/api/admin/categories`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
                 const data = await response.json();
                 setCategories(data);
-
-                // Keep local storage in sync just in case other parts of the app rely on it
-                localStorage.setItem("ecom_categories", JSON.stringify(data.map((c: any) => c.name)));
             }
         } catch (error) {
             console.error("Failed to fetch categories", error);
@@ -40,11 +38,7 @@ export default function SettingsPage() {
     // Load initial categories
     useEffect(() => {
         const checkAccess = () => {
-            const token = localStorage.getItem("ecom_token");
-            const role = localStorage.getItem("ecom_role")?.trim().toUpperCase();
-            const isAdmin = role === "ROLE_ADMIN" || role === "ADMIN";
-
-            if (!token || !isAdmin) {
+            if (!getTokenFromCookie() || !isAdminFromCookie()) {
                 router.push("/login");
                 return false;
             }
@@ -66,7 +60,7 @@ export default function SettingsPage() {
 
         const loadingToast = toast.loading("Adding category...");
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const formData = new FormData();
             formData.append("name", trimmed);
             if (newCategoryImage) {
@@ -104,7 +98,7 @@ export default function SettingsPage() {
 
         const loadingToast = toast.loading("Updating category...");
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const formData = new FormData();
             formData.append("name", trimmed);
             if (editingCategory.image) {
@@ -130,16 +124,14 @@ export default function SettingsPage() {
     };
 
     const handleLogout = () => {
-        localStorage.clear();
-        document.cookie = "ecom_token=; path=/; max-age=0";
-        document.cookie = "ecom_role=; path=/; max-age=0";
+        clearAuthCookies();
         router.push("/login");
     };
 
     const handleChangeEmail = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const token = localStorage.getItem("ecom_token");
+        const token = getTokenFromCookie();
 
         try {
             const response = await fetch(`${apiHost}/api/admin/change-email`, {
@@ -168,7 +160,7 @@ export default function SettingsPage() {
     const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        const token = localStorage.getItem("ecom_token");
+        const token = getTokenFromCookie();
 
         try {
             const response = await fetch(`${apiHost}/api/admin/change-password`, {
@@ -231,9 +223,7 @@ export default function SettingsPage() {
                 </nav>
 
                 <button onClick={() => {
-                    localStorage.clear();
-                    document.cookie = "ecom_token=; path=/; max-age=0";
-                    document.cookie = "ecom_role=; path=/; max-age=0";
+                    clearAuthCookies();
                     router.push("/login");
                 }} className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all">
                     Logout

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { getTokenFromCookie } from "../utils/auth";
 
 export default function ChangePasswordPage() {
     const router = useRouter();
@@ -25,7 +26,7 @@ export default function ChangePasswordPage() {
 
         try {
             const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
 
             const response = await fetch(`${apiHost}/api/change-password`, {
                 method: 'POST',
@@ -41,7 +42,6 @@ export default function ChangePasswordPage() {
             if (response.ok) {
                 setStatus("success");
                 toast.success("Password updated successfully!");
-                localStorage.setItem("is_auth", "true");
                 setTimeout(() => {
                     window.location.href = "/dashboard";
                 }, 2000);

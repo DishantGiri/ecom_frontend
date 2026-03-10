@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../utils/auth";
 
 interface Offer {
     id?: number;
@@ -97,15 +98,11 @@ export default function ProductsPage() {
         };
 
         const checkAccessAndFetch = async () => {
-            const token = localStorage.getItem("ecom_token");
-            const role = localStorage.getItem("ecom_role")?.trim().toUpperCase();
-            const isAdmin = role === "ROLE_ADMIN" || role === "ADMIN";
-
-            if (!token || !isAdmin) {
+            const token = getTokenFromCookie();
+            if (!token || !isAdminFromCookie()) {
                 router.push("/login");
                 return;
             }
-
             await Promise.all([fetchProducts(), fetchCategories()]);
         };
 
@@ -160,7 +157,7 @@ export default function ProductsPage() {
 
         const loadingToast = toast.loading("Deleting product...");
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const response = await fetch(`${apiHost}/api/admin/products/${id}`, {
                 method: "DELETE",
                 headers: {
@@ -224,7 +221,7 @@ export default function ProductsPage() {
 
         const loadingToast = toast.loading("Deleting image...");
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const response = await fetch(`${apiHost}/api/admin/products/${editingProduct.id}/${type}/${filename.split('/').pop()}`, {
                 method: "DELETE",
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -257,7 +254,7 @@ export default function ProductsPage() {
 
         const loadingToast = toast.loading(editingProduct ? "Updating product..." : "Adding product...");
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const form = new FormData();
 
             // Append JSON data
@@ -403,9 +400,7 @@ export default function ProductsPage() {
                 </nav>
 
                 <button onClick={() => {
-                    localStorage.clear();
-                    document.cookie = "ecom_token=; path=/; max-age=0";
-                    document.cookie = "ecom_role=; path=/; max-age=0";
+                    clearAuthCookies();
                     router.push("/login");
                 }} className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all">
                     Logout

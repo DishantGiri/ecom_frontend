@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useCurrency } from "./CurrencyProvider";
 import { useLanguage, LANGUAGES } from "./LanguageProvider";
+import { getTokenFromCookie, clearAuthCookies, isLoggedInFromCookie } from "../utils/auth";
 
 const CURRENCIES = [
   { code: "AUD", name: "Australian Dollar", symbol: "A$", flag: "au" },
@@ -65,8 +66,7 @@ const Navbar = () => {
   );
 
   useEffect(() => {
-    const auth = localStorage.getItem("ecom_token");
-    setIsLoggedIn(!!auth);
+    setIsLoggedIn(isLoggedInFromCookie());
   }, []);
 
   useEffect(() => {
@@ -95,9 +95,7 @@ const Navbar = () => {
   }, [lastScrollY]);
 
   const handleLogout = () => {
-    localStorage.clear();
-    document.cookie = "ecom_token=; path=/; max-age=0";
-    document.cookie = "ecom_role=; path=/; max-age=0";
+    clearAuthCookies();
     setIsLoggedIn(false);
     setIsAccountOpen(false);
     router.push("/");
@@ -310,7 +308,7 @@ const Navbar = () => {
               <div className="relative flex-shrink-0">
                 <button
                   onClick={() => { setIsAccountOpen(!isAccountOpen); setIsCurrencyOpen(false); setIsLanguageOpen(false); }}
-                  onMouseEnter={() => { setIsAccountOpen(true); setIsLoggedIn(!!localStorage.getItem("ecom_token")); setIsCurrencyOpen(false); setIsLanguageOpen(false); }}
+                  onMouseEnter={() => { setIsAccountOpen(true); setIsLoggedIn(isLoggedInFromCookie()); setIsCurrencyOpen(false); setIsLanguageOpen(false); }}
                   className="flex items-center gap-1.5 px-3 py-2 bg-navy text-white rounded-xl font-bold text-[13px] hover:bg-navy/90 transition-all flex-shrink-0"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>

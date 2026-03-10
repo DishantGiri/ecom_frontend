@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
+import { setAuthCookies } from "../utils/auth";
 
 function LoginForm() {
     const router = useRouter();
@@ -43,16 +44,9 @@ function LoginForm() {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Login Success Data:", data);
 
-                localStorage.setItem('ecom_token', data.token);
-                localStorage.setItem('ecom_role', data.role);
-                localStorage.setItem('registered_email', data.email);
-
-                // Set cookies for middleware access to prevent "blink" on protected routes
-                const cookieOptions = "path=/; SameSite=Lax; max-age=86400"; // 24h
-                document.cookie = `ecom_token=${data.token}; ${cookieOptions}`;
-                document.cookie = `ecom_role=${data.role}; ${cookieOptions}`;
+                // Store exclusively in cookies — readable by middleware server-side
+                setAuthCookies(data.token, data.role, data.email);
 
                 setStatus("success");
                 toast.success("Login successful!");
@@ -61,12 +55,7 @@ function LoginForm() {
                     if (data.mustChangePassword) {
                         router.push('/change-password');
                     } else {
-                        localStorage.setItem("is_auth", "true");
                         const isAdminRole = data.role === 'ROLE_ADMIN' || data.role === 'ADMIN';
-
-                        // DEBUG: Log the final decision
-                        console.log("Redirecting to:", isAdminRole ? '/dashboard' : '/', "with role:", data.role);
-
                         if (isAdminRole) {
                             router.push('/dashboard');
                         } else {
@@ -79,21 +68,6 @@ function LoginForm() {
                 toast.error("Invalid credentials. Please verify your email and password.");
             }
         } catch (err) {
-            // Fallback for simulation if API is down and not admin
-            if (!isAdmin) {
-                const storedEmail = localStorage.getItem("registered_email");
-                const storedPassword = localStorage.getItem("user_vault_key");
-
-                if (formData.email === storedEmail && formData.password === storedPassword) {
-                    setStatus("success");
-                    localStorage.setItem("is_auth", "true");
-                    toast.success("Login successful!");
-                    setTimeout(() => {
-                        window.location.href = "/";
-                    }, 2000);
-                    return;
-                }
-            }
             setStatus("error");
             toast.error("Server connection failed. Please ensure the API is running.");
         }

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../../utils/auth";
 
 interface ClickStats {
     productTitle: string;
@@ -19,11 +20,7 @@ export default function AnalyticsPage() {
 
     useEffect(() => {
         const checkAccess = () => {
-            const token = localStorage.getItem("ecom_token");
-            const role = localStorage.getItem("ecom_role")?.trim().toUpperCase();
-            const isAdmin = role === "ROLE_ADMIN" || role === "ADMIN";
-
-            if (!token || !isAdmin) {
+            if (!getTokenFromCookie() || !isAdminFromCookie()) {
                 router.push("/login");
                 return false;
             }
@@ -37,7 +34,7 @@ export default function AnalyticsPage() {
 
     const fetchStats = async () => {
         try {
-            const token = localStorage.getItem("ecom_token");
+            const token = getTokenFromCookie();
             const response = await fetch(`${apiHost}/api/admin/analytics/clicks`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -88,9 +85,7 @@ export default function AnalyticsPage() {
                 </nav>
 
                 <button onClick={() => {
-                    localStorage.clear();
-                    document.cookie = "ecom_token=; path=/; max-age=0";
-                    document.cookie = "ecom_role=; path=/; max-age=0";
+                    clearAuthCookies();
                     router.push("/login");
                 }} className="p-4 bg-white/5 hover:bg-white/10 rounded-xl text-center text-xs font-black uppercase tracking-widest transition-all">
                     Logout
