@@ -13,6 +13,7 @@ interface Blog {
     id: number;
     title: string;
     slug: string;
+    intro: string;
     content: string;
     featureImageUrl: string;
     author: string;
@@ -32,6 +33,7 @@ export default function BlogsPage() {
 
     const [formData, setFormData] = useState({
         title: "",
+        intro: "",
         content: "",
         author: "",
         metaTitle: "",
@@ -158,6 +160,7 @@ export default function BlogsPage() {
     const resetForm = () => {
         setFormData({
             title: "",
+            intro: "",
             content: "",
             author: "",
             metaTitle: "",
@@ -172,6 +175,7 @@ export default function BlogsPage() {
         setEditingBlog(blog);
         setFormData({
             title: blog.title,
+            intro: blog.intro || "",
             content: blog.content,
             author: blog.author,
             metaTitle: blog.metaTitle || "",
@@ -347,6 +351,19 @@ export default function BlogsPage() {
                                             placeholder="Dr. Sarah Mitchell"
                                         />
                                     </div>
+                                </div>
+
+                                {/* Intro / Tagline */}
+                                <div className="space-y-2 col-span-2">
+                                    <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Intro / Tagline</label>
+                                    <textarea
+                                        rows={3}
+                                        value={formData.intro}
+                                        onChange={(e) => setFormData({ ...formData, intro: e.target.value })}
+                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red focus:ring-1 focus:ring-accent-red/20 transition-all placeholder:text-navy/20 min-h-[80px] resize-none"
+                                        placeholder="Discover how this supplement supports cardiovascular health and boosts energy levels naturally."
+                                    />
+                                    <p className="text-[9px] text-navy/30 font-bold uppercase tracking-widest pl-1">Shown as the highlighted quote block below the feature image</p>
                                 </div>
                             </div>
 

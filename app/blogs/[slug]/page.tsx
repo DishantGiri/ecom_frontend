@@ -1,11 +1,15 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import ShareButtons from "./ShareButtons";
 
 interface Blog {
     id: number;
     title: string;
     slug: string;
+    intro: string;
     content: string;
     featureImageUrl: string;
     author: string;
@@ -24,58 +28,60 @@ function getImageUrl(url: string): string {
     return `${apiHost}/api/images/${url}`;
 }
 
-async function getBlog(slug: string): Promise<Blog | null> {
-    try {
-        const res = await fetch(`${apiHost}/api/blogs/${slug}`, {
-            next: { revalidate: 60 },
-        });
-        if (!res.ok) return null;
-        return res.json();
-    } catch (e) {
-        console.error("Failed to fetch blog", e);
-        return null;
+function decodeHtml(html: string): string {
+    if (typeof document === "undefined") return html;
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+}
+
+export default function BlogDetailsPage() {
+    const params = useParams<{ slug: string }>();
+    const slug = params?.slug || "";
+
+    const [blog, setBlog] = useState<Blog | null>(null);
+    const [relatedBlogs, setRelatedBlogs] = useState<Blog[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!slug) return;
+        (async () => {
+            try {
+                const [blogRes, allRes] = await Promise.all([
+                    fetch(`${apiHost}/api/blogs/${slug}`, { cache: "no-store" }),
+                    fetch(`${apiHost}/api/blogs`, { cache: "no-store" }),
+                ]);
+                const blogData: Blog = blogRes.ok ? await blogRes.json() : null;
+                const allData: Blog[] = allRes.ok ? await allRes.json() : [];
+                setBlog(blogData);
+                setRelatedBlogs(allData.filter((b) => b.slug !== slug).slice(0, 3));
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [slug]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-7 h-7 border-[3px] border-gray-200 border-t-gray-500 rounded-full animate-spin" />
+                    <p className="text-xs text-gray-400 uppercase tracking-widest font-semibold">Loading</p>
+                </div>
+            </div>
+        );
     }
-}
 
-async function getAllBlogs(): Promise<Blog[]> {
-    try {
-        const res = await fetch(`${apiHost}/api/blogs`, {
-            next: { revalidate: 60 },
-        });
-        if (!res.ok) return [];
-        return res.json();
-    } catch (e) {
-        return [];
+    if (!blog) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-800 mb-2">Article not found</p>
+                    <Link href="/blogs" className="text-[#0a7abf] text-sm hover:underline">← Back to Blog</Link>
+                </div>
+            </div>
+        );
     }
-}
-
-export async function generateMetadata({
-    params,
-}: {
-    params: Promise<{ slug: string }>;
-}) {
-    const { slug } = await params;
-    const blog = await getBlog(slug);
-    if (!blog) return { title: "Blog Not Found" };
-    return {
-        title: blog.metaTitle || blog.title,
-        description: blog.metaDescription,
-        keywords: blog.metaKeywords,
-    };
-}
-
-export default async function BlogDetailsPage({
-    params,
-}: {
-    params: Promise<{ slug: string }>;
-}) {
-    const { slug } = await params;
-    const blog = await getBlog(slug);
-
-    if (!blog) notFound();
-
-    const allBlogs = await getAllBlogs();
-    const relatedBlogs = allBlogs.filter((b) => b.slug !== slug).slice(0, 3);
 
     const publishDate = new Date(blog.createdAt).toLocaleDateString("en-US", {
         month: "long",
@@ -87,217 +93,176 @@ export default async function BlogDetailsPage({
     const minuteRead = Math.max(1, Math.ceil(wordCount / 200));
 
     return (
-        <div className="min-h-screen bg-white font-sans overflow-x-hidden">
+        <div className="min-h-screen bg-white font-sans">
 
-            {/* ── TOP BREADCRUMB ── */}
-            <div className="border-b border-gray-100 bg-white/90 backdrop-blur-sm sticky top-0 z-50">
-                <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-2 text-[11px] font-semibold text-navy/40 uppercase tracking-widest">
-                    <Link href="/" className="hover:text-navy transition-colors">Home</Link>
-                    <span>/</span>
-                    <Link href="/blogs" className="hover:text-navy transition-colors">Blog</Link>
-                    <span>/</span>
-                    <span className="text-navy/60 line-clamp-1 max-w-xs">{blog.title}</span>
+            {/* ── STICKY TOP NAV ── */}
+            <div className="sticky top-0 z-50 bg-white border-b border-gray-100">
+                <div className="max-w-[960px] mx-auto px-4 py-3 flex items-center gap-2 text-[11px] text-gray-400 font-medium">
+                    <Link href="/" className="hover:text-gray-700 transition-colors">Home</Link>
+                    <span className="text-gray-200">/</span>
+                    <Link href="/blogs" className="hover:text-gray-700 transition-colors">Blog</Link>
+                    <span className="text-gray-200">/</span>
+                    <span className="text-gray-500 line-clamp-1 max-w-xs">{blog.title}</span>
                 </div>
             </div>
 
-            {/* ── HERO / HEADER ── */}
-            <header className="max-w-3xl mx-auto px-6 pt-14 pb-8 text-center">
-                {/* Category pill */}
-                <div className="inline-flex items-center gap-2 bg-[#f0f4ff] text-[#3D5BC9] text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="7" height="7" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="12" cy="12" r="10" />
-                    </svg>
-                    Resource Guide
-                </div>
+            {/* ── ARTICLE HEADER ── */}
+            <article className="max-w-[960px] mx-auto px-4 pt-10 pb-0">
 
-                <h1 className="text-3xl md:text-[2.75rem] font-black text-navy tracking-tight leading-[1.1] mb-4">
+                {/* Title */}
+                <h1
+                    className="text-[2rem] md:text-[2.4rem] font-extrabold leading-[1.15] tracking-tight mb-3"
+                    style={{ color: "#1a1a2e", fontFamily: "Georgia, 'Times New Roman', serif" }}
+                >
                     {blog.title}
                 </h1>
 
-                {blog.metaDescription && (
-                    <p className="text-navy/50 text-base font-medium leading-relaxed max-w-2xl mx-auto mb-8">
-                        {blog.metaDescription}
+                {/* Intro subtitle */}
+                {blog.intro && (
+                    <p className="text-[15px] text-gray-500 leading-relaxed mb-5 font-normal">
+                        {blog.intro}
                     </p>
                 )}
 
-                {/* Author row */}
-                <div className="flex items-center justify-center gap-3 flex-wrap">
-                    {/* Avatar */}
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#3D5BC9] to-[#6B7FD9] flex items-center justify-center text-white font-black text-sm flex-shrink-0 shadow-md">
-                        {blog.author?.charAt(0)?.toUpperCase() || "A"}
+                {/* Author / Date row */}
+                <div className="flex items-center gap-5 text-[13px] text-gray-500 mb-5">
+                    <span className="flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        {blog.author || "Editorial Team"}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                            <line x1="16" x2="16" y1="2" y2="6" />
+                            <line x1="8" x2="8" y1="2" y2="6" />
+                            <line x1="3" x2="21" y1="10" y2="10" />
+                        </svg>
+                        {publishDate}
+                    </span>
+                    <span className="flex items-center gap-1.5 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        {minuteRead} min read
+                    </span>
+                    <div className="ml-auto">
+                        <ShareButtons title={blog.title} />
                     </div>
-                    <div className="text-left">
-                        <p className="text-navy font-black text-sm leading-none">{blog.author || "Editorial Team"}</p>
-                        <p className="text-navy/40 text-[11px] font-semibold mt-0.5">
-                            {publishDate} &middot; {minuteRead} min read
-                        </p>
-                    </div>
-
-                    <div className="h-6 w-px bg-gray-200 mx-1 hidden md:block" />
-
-                    {/* Share buttons – client component */}
-                    <ShareButtons title={blog.title} />
                 </div>
-            </header>
 
-            {/* ── FEATURE IMAGE ── */}
-            {blog.featureImageUrl && (
-                <div className="max-w-4xl mx-auto px-6 mb-12">
-                    <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-navy/10 border border-gray-100">
+                {/* Horizontal Rule */}
+                <hr className="border-gray-200 mb-8" />
+
+                {/* Feature Image */}
+                {blog.featureImageUrl && (
+                    <div className="mb-10">
                         <img
                             src={getImageUrl(blog.featureImageUrl)}
                             alt={blog.title}
-                            className="w-full h-[280px] md:h-[440px] object-cover"
+                            className="w-full rounded-lg object-cover"
+                            style={{ maxHeight: "480px" }}
                         />
-                        {/* Gradient overlay at bottom */}
-                        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
-                        {blog.metaKeywords && (
-                            <div className="absolute bottom-5 right-5">
-                                <span className="bg-white/90 backdrop-blur-sm text-navy text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/40 shadow">
-                                    {blog.metaKeywords.split(",")[0]?.trim()}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            <div className="max-w-3xl mx-auto px-6 pb-16 overflow-hidden">
-                <div
-                    className="
-                        prose prose-base md:prose-lg max-w-none
-                        prose-headings:font-black prose-headings:text-navy prose-headings:tracking-tight prose-headings:leading-tight
-                        prose-h1:text-3xl
-                        prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
-                        prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                        prose-p:text-navy/70 prose-p:leading-[1.85] prose-p:font-medium prose-p:text-[15px]
-                        prose-a:text-[#3D5BC9] prose-a:font-bold prose-a:no-underline hover:prose-a:underline
-                        prose-strong:text-navy prose-strong:font-black
-                        prose-li:text-navy/70 prose-li:font-medium prose-li:text-[15px] prose-li:leading-relaxed
-                        prose-ul:my-6 prose-ol:my-6 prose-ul:space-y-2 prose-ol:space-y-2
-                        prose-blockquote:border-l-4 prose-blockquote:border-[#3D5BC9]
-                        prose-blockquote:bg-[#f7f9ff] prose-blockquote:px-6 prose-blockquote:py-4
-                        prose-blockquote:rounded-r-2xl prose-blockquote:not-italic
-                        prose-blockquote:text-navy/80 prose-blockquote:font-semibold
-                        prose-img:rounded-2xl prose-img:shadow-xl prose-img:border prose-img:border-gray-100
-                        prose-hr:border-gray-100 prose-hr:my-12
-                        [&_ol>li]:marker:text-[#3D5BC9] [&_ol>li]:marker:font-black
-                    "
-                    dangerouslySetInnerHTML={{ __html: blog.content }}
-                />
-
-                {/* ── INLINE CTA BANNER ── */}
-                <div
-                    className="mt-16 rounded-3xl overflow-hidden"
-                    style={{ background: "linear-gradient(135deg, #001f3f 0%, #0a2a52 100%)" }}
-                >
-                    <div className="px-8 py-10 flex flex-col md:flex-row items-center gap-6 justify-between">
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#3D5BC9] mb-2">
-                                Shop our collection
-                            </p>
-                            <h3 className="text-white font-black text-xl md:text-2xl tracking-tight leading-snug">
-                                Vetted for Excellence.
-                            </h3>
-                            <p className="text-white/50 text-sm font-medium mt-1">
-                                Premium supplements backed by science and real results.
-                            </p>
-                        </div>
-                        <Link
-                            href="/products"
-                            className="flex-shrink-0 bg-accent-red hover:bg-red-600 text-white font-black text-xs uppercase tracking-widest px-7 py-4 rounded-full transition-all shadow-lg shadow-accent-red/20 whitespace-nowrap"
-                        >
-                            Shop Now →
-                        </Link>
-                    </div>
-                </div>
-
-                {/* ── TAGS ── */}
-                {blog.metaKeywords && (
-                    <div className="mt-12 pt-10 border-t border-gray-100">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-navy/30 mb-4">Topics</p>
-                        <div className="flex flex-wrap gap-2">
-                            {blog.metaKeywords.split(",").map((tag) => (
-                                <span
-                                    key={tag.trim()}
-                                    className="px-4 py-2 bg-gray-50 hover:bg-[#f0f4ff] text-[11px] font-black uppercase tracking-widest text-navy/50 hover:text-[#3D5BC9] rounded-full border border-gray-100 hover:border-[#3D5BC9]/20 transition-all cursor-default"
-                                >
-                                    # {tag.trim()}
-                                </span>
-                            ))}
-                        </div>
                     </div>
                 )}
 
-                {/* ── AUTHOR BIO CARD ── */}
-                <div className="mt-12 p-6 rounded-3xl bg-gray-50 border border-gray-100 flex items-start gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3D5BC9] to-[#6B7FD9] flex items-center justify-center text-white font-black text-xl flex-shrink-0 shadow-md">
+                {/* Blockquote intro */}
+                {blog.intro && (
+                    <div
+                        className="mb-8"
+                        style={{
+                            background: "#eef6fb",
+                            borderLeft: "4px solid #2aace2",
+                            borderRadius: "0 6px 6px 0",
+                            padding: "18px 22px",
+                        }}
+                    >
+                        <p className="text-[15px] text-gray-600 leading-relaxed italic font-normal m-0">
+                            {blog.intro}
+                        </p>
+                    </div>
+                )}
+
+                {/* ── ARTICLE BODY ── */}
+                <div
+                    className="blog-prose"
+                    dangerouslySetInnerHTML={{ __html: blog.content }}
+                />
+
+                {/* Tags */}
+                {blog.metaKeywords && (
+                    <div className="mt-12 pt-8 border-t border-gray-100 flex flex-wrap gap-2">
+                        {blog.metaKeywords.split(",").map((tag) => (
+                            <span
+                                key={tag.trim()}
+                                className="px-3 py-1 bg-gray-100 text-[11px] text-gray-500 font-medium rounded-full hover:bg-gray-200 transition-colors cursor-default"
+                            >
+                                #{tag.trim()}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Author Bio */}
+                <div className="mt-10 mb-16 p-5 rounded-xl bg-gray-50 border border-gray-100 flex items-start gap-4">
+                    <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+                        style={{ background: "linear-gradient(135deg, #0a7abf, #2aace2)" }}
+                    >
                         {blog.author?.charAt(0)?.toUpperCase() || "A"}
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-navy/40 mb-1">Written by</p>
-                        <p className="text-navy font-black text-base">{blog.author || "Editorial Team"}</p>
-                        <p className="text-navy/50 text-sm font-medium mt-1 leading-relaxed">
-                            Passionate about health, wellness, and helping people live their best lives through science-backed insights and practical guidance.
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">Written by</p>
+                        <p className="text-gray-800 font-bold text-sm">{blog.author || "Editorial Team"}</p>
+                        <p className="text-gray-500 text-[13px] leading-relaxed mt-1">
+                            Passionate about health, wellness, and helping people live their best lives through science-backed insights.
                         </p>
                     </div>
                 </div>
-            </div>
+            </article>
 
-            {/* ── RELATED ARTICLES ── */}
+            {/* ── Related Articles ── */}
             {relatedBlogs.length > 0 && (
-                <section className="border-t border-gray-100 bg-[#fafafa] py-20 px-6">
-                    <div className="max-w-4xl mx-auto">
-                        <div className="flex items-end justify-between mb-10">
-                            <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#3D5BC9] mb-2">
-                                    Continue Reading
-                                </p>
-                                <h2 className="text-2xl md:text-3xl font-black text-navy tracking-tight">
-                                    Related Articles
-                                </h2>
-                            </div>
-                            <Link
-                                href="/blogs"
-                                className="text-[11px] font-black uppercase tracking-widest text-navy/40 hover:text-[#3D5BC9] transition-colors flex items-center gap-1"
-                            >
+                <section className="bg-gray-50 border-t border-gray-100 py-14 px-4">
+                    <div className="max-w-[960px] mx-auto">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-xl font-bold text-gray-800">Related Articles</h2>
+                            <Link href="/blogs" className="text-[12px] text-[#0a7abf] font-medium hover:underline flex items-center gap-1">
                                 View all
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="m9 18 6-6-6-6" />
                                 </svg>
                             </Link>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                             {relatedBlogs.map((post) => (
                                 <Link
                                     key={post.id}
                                     href={`/blogs/${post.slug}`}
-                                    className="group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-navy/5 hover:-translate-y-1 transition-all duration-300"
+                                    className="group bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-md transition-all duration-200"
                                 >
                                     {post.featureImageUrl && (
                                         <div className="aspect-[16/9] overflow-hidden bg-gray-100">
                                             <img
                                                 src={getImageUrl(post.featureImageUrl)}
                                                 alt={post.title}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         </div>
                                     )}
-                                    <div className="p-5">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-[#3D5BC9] mb-2">
-                                            {new Date(post.createdAt).toLocaleDateString("en-US", {
-                                                month: "short",
-                                                day: "numeric",
-                                                year: "numeric",
-                                            })}
+                                    <div className="p-4">
+                                        <p className="text-[10px] text-gray-400 mb-1.5 font-medium">
+                                            {new Date(post.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                         </p>
-                                        <h3 className="font-black text-navy text-base leading-snug line-clamp-2 group-hover:text-[#3D5BC9] transition-colors">
+                                        <h3 className="font-bold text-gray-800 text-[14px] leading-snug line-clamp-2 group-hover:text-[#0a7abf] transition-colors">
                                             {post.title}
                                         </h3>
-                                        <p className="text-[11px] font-black uppercase tracking-widest text-navy/30 mt-4 flex items-center gap-1">
-                                            Read Article
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <p className="text-[11px] text-[#0a7abf] font-medium mt-3 flex items-center gap-1">
+                                            Read more
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="m9 18 6-6-6-6" />
                                             </svg>
                                         </p>
@@ -309,65 +274,95 @@ export default async function BlogDetailsPage({
                 </section>
             )}
 
-            {/* ── FOOTER ── */}
-            <footer className="bg-navy text-white">
-                <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-16 grid grid-cols-2 md:grid-cols-4 gap-12">
-                    {/* Brand */}
-                    <div className="col-span-2 md:col-span-1">
-                        <div className="flex items-center gap-2 mb-5">
-                            <div className="w-7 h-7 rounded-lg bg-accent-red flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                                </svg>
-                            </div>
-                            <span className="font-black text-sm uppercase tracking-widest">Brand</span>
-                        </div>
-                        <p className="text-white/40 text-xs font-medium leading-relaxed">
-                            Science-backed supplements and wellness products that help you live and perform at your best.
-                        </p>
-                    </div>
 
-                    {/* Shop */}
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-5">Shop</p>
-                        <ul className="space-y-3 text-sm font-semibold text-white/60">
-                            {["All Products", "Categories", "Bundle Deals", "New Arrivals"].map((t) => (
-                                <li key={t}>
-                                    <Link href="/products" className="hover:text-white transition-colors">{t}</Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Navigation */}
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-5">Navigation</p>
-                        <ul className="space-y-3 text-sm font-semibold text-white/60">
-                            {[["Home", "/"], ["Blog", "/blogs"], ["Gift Guide", "/products"], ["FAQs", "/"], ["About us", "/"]].map(([label, href]) => (
-                                <li key={label}>
-                                    <Link href={href} className="hover:text-white transition-colors">{label}</Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Legal */}
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-5">Legal</p>
-                        <ul className="space-y-3 text-sm font-semibold text-white/60">
-                            {["Privacy Policy", "Terms of Use", "Cookie Policy", "Disclaimer"].map((t) => (
-                                <li key={t}>
-                                    <span className="hover:text-white transition-colors cursor-pointer">{t}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-
-                <div className="border-t border-white/5 py-6 text-center text-[11px] font-semibold text-white/20 tracking-widest">
-                    © {new Date().getFullYear()} All rights reserved.
-                </div>
-            </footer>
+            <style>{`
+                .blog-prose {
+                    font-size: 15px;
+                    line-height: 1.85;
+                    color: #3a3a4a;
+                    overflow-x: hidden;
+                    overflow-wrap: break-word;
+                    word-break: break-word;
+                }
+                .blog-prose p {
+                    margin-bottom: 1.2em;
+                    color: #3a3a4a;
+                    overflow-wrap: break-word;
+                    word-break: break-word;
+                }
+                .blog-prose h1,
+                .blog-prose h2,
+                .blog-prose h3,
+                .blog-prose h4 {
+                    font-family: Georgia, 'Times New Roman', serif;
+                    font-weight: 800;
+                    color: #1a1a2e;
+                    margin-top: 2em;
+                    margin-bottom: 0.6em;
+                    line-height: 1.25;
+                }
+                .blog-prose h2 {
+                    font-size: 1.35rem;
+                }
+                .blog-prose h3 {
+                    font-size: 1.15rem;
+                }
+                .blog-prose a {
+                    color: #c47a2b;
+                    text-decoration: none;
+                    font-weight: 500;
+                }
+                .blog-prose a:hover {
+                    text-decoration: underline;
+                }
+                .blog-prose strong {
+                    font-weight: 700;
+                    color: #1a1a2e;
+                }
+                .blog-prose ul, .blog-prose ol {
+                    padding-left: 1.5em;
+                    margin-bottom: 1.2em;
+                }
+                .blog-prose li {
+                    margin-bottom: 0.4em;
+                }
+                .blog-prose blockquote {
+                    border-left: 4px solid #2aace2;
+                    background: #eef6fb;
+                    padding: 14px 20px;
+                    border-radius: 0 6px 6px 0;
+                    margin: 1.5em 0;
+                    font-style: italic;
+                    color: #5a6a7a;
+                }
+                .blog-prose img {
+                    border-radius: 8px;
+                    max-width: 100%;
+                    height: auto;
+                    margin: 1.5em 0;
+                }
+                .blog-prose hr {
+                    border: none;
+                    border-top: 1px solid #e5e7eb;
+                    margin: 2em 0;
+                }
+                .blog-prose table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 1.5em 0;
+                    font-size: 14px;
+                }
+                .blog-prose th, .blog-prose td {
+                    border: 1px solid #e5e7eb;
+                    padding: 8px 12px;
+                    text-align: left;
+                }
+                .blog-prose th {
+                    background: #f8f9fa;
+                    font-weight: 700;
+                    color: #1a1a2e;
+                }
+            `}</style>
         </div>
     );
 }

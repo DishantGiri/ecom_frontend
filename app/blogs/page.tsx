@@ -5,6 +5,7 @@ interface Blog {
     id: number;
     title: string;
     slug: string;
+    intro: string;
     content: string;
     featureImageUrl: string;
     author: string;

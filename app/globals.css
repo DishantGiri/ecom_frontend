@@ -14,6 +14,7 @@
 
 html {
   scroll-behavior: smooth;
+  top: 0 !important;
 }
 
 :root {
@@ -35,9 +36,62 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  top: 0 !important;
 }
+
+html {
+  margin: 0 !important;
+  padding: 0 !important;
+  top: 0 !important;
+}
+
+/* Hide Google Translate UI Aggressively */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner,
+.goog-te-gadget-icon,
+.goog-te-menu-value span:nth-child(2),
+.goog-te-menu-value span:nth-child(3),
+.goog-te-menu-value img,
+#goog-gt-tt,
+#goog-gt-vt,
+#goog-gt-,
+.goog-te-balloon-frame,
+.goog-te-menu-frame,
+.goog-te-menu2,
+#google_translate_element,
+.translated-ltr,
+.translated-rtl {
+  top: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+#google_translate_element {
+  display: none !important;
+}
+
+iframe.goog-te-banner-frame {
+  display: none !important;
+}
+
+.goog-te-gadget {
+  font-family: inherit !important;
+  color: transparent !important;
+}
+
+.goog-text-highlight {
+  background: none !important;
+  box-shadow: none !important;
+}
+
+.skiptranslate {
+  display: none !important;
+}
+
+
 
 
 
@@ -117,4 +171,62 @@ div.hide-scrollbar::-webkit-scrollbar,
   display: none !important;
   width: 0 !important;
   height: 0 !important;
+}
+
+/* Scroll Reveal Animations */
+@layer utilities {
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .reveal-fade-in {
+    opacity: 0;
+    transition: opacity 1s ease-out;
+  }
+
+  .reveal-fade-in.reveal-visible {
+    opacity: 1;
+  }
+
+  .reveal-slide-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-slide-left.reveal-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .reveal-slide-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-slide-right.reveal-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .reveal-scale-up {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal-scale-up.reveal-visible {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { getUserIP, getCountryByIP } from "../utils/tracking";
+
 
 interface CurrencyContextType {
     currency: string;
@@ -38,29 +38,46 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     const [currency, setCurrencyState] = useState("USD");
 
     useEffect(() => {
-        const stored = sessionStorage.getItem("session_currency");
-        if (stored) {
-            setCurrencyState(stored);
-        } else {
-            (async () => {
-                const ip = await getUserIP();
-                if (ip) {
-                    const country = await getCountryByIP(ip);
-                    if (country && COUNTRY_TO_CURRENCY[country]) {
-                        setCurrencyState(COUNTRY_TO_CURRENCY[country]);
-                        // Don't save to localStorage so it can update if they travel, 
-                        // unless they manually select.
-                        return;
-                    }
-                }
-                setCurrencyState("USD");
-            })();
+        // Only respect sessionStorage if the user MANUALLY selected a currency.
+        // Auto-detected values are never cached so proxy/VPN changes take effect immediately.
+        const manualPick = sessionStorage.getItem("currency_manual");
+        if (manualPick) {
+            setCurrencyState(manualPick);
+            return;
         }
+
+        // Auto-detect from IP
+        (async () => {
+            try {
+                // Short timeout so a slow geoip lookup doesn't block the page
+                const ipRes = await Promise.race([
+                    fetch("https://api.ipify.org?format=json"),
+                    new Promise<null>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000))
+                ]) as Response;
+                const { ip } = await ipRes.json();
+
+                const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
+                const countryRes = await Promise.race([
+                    fetch(`${apiHost}/api/track/country?ipAddress=${ip}`),
+                    new Promise<null>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000))
+                ]) as Response;
+                const { country } = await countryRes.json();
+
+                if (country && COUNTRY_TO_CURRENCY[country]) {
+                    setCurrencyState(COUNTRY_TO_CURRENCY[country]);
+                    return;
+                }
+            } catch {
+                // Network/timeout — silently fall back to USD
+            }
+            setCurrencyState("USD");
+        })();
     }, []);
 
+    // Manual selection — stored separately so it's not confused with auto-detection
     const setCurrency = (curr: string) => {
         setCurrencyState(curr);
-        sessionStorage.setItem("session_currency", curr);
+        sessionStorage.setItem("currency_manual", curr);
     };
 
     const currencySymbol = CURRENCY_SYMBOLS[currency] || "$";

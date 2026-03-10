@@ -7,8 +7,10 @@ import toast from "react-hot-toast";
 
 export default function SettingsPage() {
     const router = useRouter();
-    const [categories, setCategories] = useState<string[]>([]);
+    const [categories, setCategories] = useState<{ id: number; name: string; imageUrl?: string }[]>([]);
     const [newCategory, setNewCategory] = useState("");
+    const [newCategoryImage, setNewCategoryImage] = useState<File | null>(null);
+    const [editingCategory, setEditingCategory] = useState<{ id: number; name: string; image?: File | null } | null>(null);
 
     // Admin Account States
     const [emailData, setEmailData] = useState({ newEmail: "", password: "" });
@@ -16,6 +18,24 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
 
     const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
+
+    const fetchCategories = async () => {
+        try {
+            const token = localStorage.getItem("ecom_token");
+            const response = await fetch(`${apiHost}/api/admin/categories`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setCategories(data);
+
+                // Keep local storage in sync just in case other parts of the app rely on it
+                localStorage.setItem("ecom_categories", JSON.stringify(data.map((c: any) => c.name)));
+            }
+        } catch (error) {
+            console.error("Failed to fetch categories", error);
+        }
+    };
 
     // Load initial categories
     useEffect(() => {
@@ -32,19 +52,11 @@ export default function SettingsPage() {
         };
 
         if (checkAccess()) {
-            const stored = localStorage.getItem("ecom_categories");
-            if (stored) {
-                setCategories(JSON.parse(stored));
-            } else {
-                // Defaults
-                const defaults = ["Supplements", "Injectables", "Wellness", "Accessories"];
-                setCategories(defaults);
-                localStorage.setItem("ecom_categories", JSON.stringify(defaults));
-            }
+            fetchCategories();
         }
     }, [router]);
 
-    const handleAddCategory = (e: React.FormEvent) => {
+    const handleAddCategory = async (e: React.FormEvent) => {
         e.preventDefault();
         const trimmed = newCategory.trim();
         if (!trimmed) {
@@ -52,26 +64,69 @@ export default function SettingsPage() {
             return;
         }
 
-        // Case-insensitive check for duplicates
-        if (categories.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
-            toast.error("Category already exists");
+        const loadingToast = toast.loading("Adding category...");
+        try {
+            const token = localStorage.getItem("ecom_token");
+            const formData = new FormData();
+            formData.append("name", trimmed);
+            if (newCategoryImage) {
+                formData.append("image", newCategoryImage);
+            }
+
+            const response = await fetch(`${apiHost}/api/admin/categories`, {
+                method: "POST",
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            if (response.ok) {
+                toast.success(`Category "${trimmed}" added!`, { id: loadingToast });
+                setNewCategory("");
+                setNewCategoryImage(null);
+                fetchCategories();
+            } else {
+                toast.error("Failed to add category", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Network error while adding category", { id: loadingToast });
+        }
+    };
+
+    const handleEditCategory = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingCategory) return;
+
+        const trimmed = editingCategory.name.trim();
+        if (!trimmed) {
+            toast.error("Category name cannot be empty");
             return;
         }
 
-        const updated = [...categories, trimmed];
-        setCategories(updated);
-        localStorage.setItem("ecom_categories", JSON.stringify(updated));
-        setNewCategory("");
-        toast.success(`Category "${trimmed}" added!`);
-    };
+        const loadingToast = toast.loading("Updating category...");
+        try {
+            const token = localStorage.getItem("ecom_token");
+            const formData = new FormData();
+            formData.append("name", trimmed);
+            if (editingCategory.image) {
+                formData.append("image", editingCategory.image);
+            }
 
-    const handleRemoveCategory = (catToRemove: string) => {
-        if (!confirm("Remove this category? Existing products with this category will remain unaffected.")) return;
+            const response = await fetch(`${apiHost}/api/admin/categories/${editingCategory.id}`, {
+                method: "PUT",
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
 
-        const updated = categories.filter(c => c !== catToRemove);
-        setCategories(updated);
-        localStorage.setItem("ecom_categories", JSON.stringify(updated));
-        toast.success("Category removed from dropdown list.");
+            if (response.ok) {
+                toast.success(`Category updated!`, { id: loadingToast });
+                setEditingCategory(null);
+                fetchCategories();
+            } else {
+                toast.error("Failed to update category", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Network error while updating category", { id: loadingToast });
+        }
     };
 
     const handleLogout = () => {
@@ -139,6 +194,12 @@ export default function SettingsPage() {
         }
     };
 
+    const getImageUrl = (url?: string) => {
+        if (!url) return "";
+        if (url.startsWith("http")) return url;
+        return `${apiHost}/api/images/${url}`;
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex font-sans">
             {/* Sidebar */}
@@ -198,41 +259,100 @@ export default function SettingsPage() {
                                 Product Categories
                             </h3>
                             <p className="text-xs font-bold uppercase tracking-widest text-navy/50">
-                                Categories act as tags for your products. Define new categories here, and they will immediately appear in the Product Creation dropdown.
+                                Categories act as tags for your products. Define new categories here, and upload images. They will appear on the homepage.
                             </p>
 
-                            <form onSubmit={handleAddCategory} className="flex gap-4 items-end mt-4">
-                                <div className="flex-1 space-y-2">
-                                    <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">New Category Name</label>
-                                    <input
-                                        type="text" required
-                                        value={newCategory}
-                                        onChange={(e) => setNewCategory(e.target.value)}
-                                        placeholder="e.g. Skin Care"
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="bg-navy hover:bg-black text-white px-8 py-4 rounded-none font-black text-xs uppercase tracking-widest transition-all shadow-md flex-shrink-0"
-                                >
-                                    Add Category
-                                </button>
-                            </form>
+                            {editingCategory ? (
+                                <form onSubmit={handleEditCategory} className="flex gap-4 items-end mt-4 bg-gray-50 p-6 border-l-4 border-accent-red shadow-sm">
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Edit Category Name</label>
+                                        <input
+                                            type="text" required
+                                            value={editingCategory.name}
+                                            onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text"
+                                        />
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">New Image (Optional)</label>
+                                        <input
+                                            type="file" accept="image/*"
+                                            onChange={(e) => setEditingCategory({ ...editingCategory, image: e.target.files?.[0] || null })}
+                                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-sm text-navy file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-navy/5 file:text-navy hover:file:bg-navy/10 cursor-pointer"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingCategory(null)}
+                                        className="bg-gray-200 hover:bg-gray-300 text-navy px-6 py-4 rounded-none font-black text-xs uppercase tracking-widest transition-all shadow-md flex-shrink-0"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="bg-navy hover:bg-black text-white px-8 py-4 rounded-none font-black text-xs uppercase tracking-widest transition-all shadow-md flex-shrink-0"
+                                    >
+                                        Save
+                                    </button>
+                                </form>
+                            ) : (
+                                <form onSubmit={handleAddCategory} className="flex gap-4 items-end mt-4">
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">New Category Name</label>
+                                        <input
+                                            type="text" required
+                                            value={newCategory}
+                                            onChange={(e) => setNewCategory(e.target.value)}
+                                            placeholder="e.g. Skin Care"
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text"
+                                        />
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Category Image (Optional)</label>
+                                        <input
+                                            type="file" accept="image/*"
+                                            onChange={(e) => setNewCategoryImage(e.target.files?.[0] || null)}
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-none text-sm text-navy file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-navy/5 file:text-navy hover:file:bg-navy/10 cursor-pointer"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="bg-navy hover:bg-black text-white px-8 py-4 rounded-none font-black text-xs uppercase tracking-widest transition-all shadow-md flex-shrink-0"
+                                    >
+                                        Add Category
+                                    </button>
+                                </form>
+                            )}
 
                             <div className="mt-8">
                                 <h4 className="text-[10px] font-black text-navy uppercase tracking-widest mb-4">Current Categories</h4>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {categories.map((cat, idx) => (
-                                        <div key={idx} className="bg-gray-50 border border-gray-100 p-4 flex items-center justify-between group rounded-none">
-                                            <span className="font-bold text-sm text-navy">{cat}</span>
-                                            <button
-                                                onClick={() => handleRemoveCategory(cat)}
-                                                className="text-navy/20 hover:text-accent-red transition-colors"
-                                                title="Remove Category"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                                            </button>
+                                        <div key={idx} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col group relative">
+                                            {/* Category Image */}
+                                            <div className="w-full h-32 bg-gray-100 relative">
+                                                {cat.imageUrl ? (
+                                                    <img src={getImageUrl(cat.imageUrl)} alt={cat.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-sm">
+                                                    <button
+                                                        onClick={() => setEditingCategory({ id: cat.id, name: cat.name })}
+                                                        className="p-3 bg-white hover:bg-navy hover:text-white rounded-full text-navy transition-all shadow-lg"
+                                                        title="Edit Category"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Category Info */}
+                                            <div className="p-4 flex items-center justify-between bg-white z-10">
+                                                <span className="font-black text-sm text-navy uppercase tracking-widest">{cat.name}</span>
+                                            </div>
                                         </div>
                                     ))}
                                     {categories.length === 0 && (

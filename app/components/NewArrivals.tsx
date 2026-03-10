@@ -166,7 +166,7 @@ export default function NewArrivals() {
                                     {product.title || "Loading..."}
                                 </h3>
                                 <p className="text-[10px] text-navy/40 font-bold uppercase tracking-[0.15em]">
-                                    {product.category || "Quality Supplement"}
+                                    {typeof product.category === 'object' && product.category !== null ? product.category.name : (product.category || "Quality Supplement")}
                                 </p>
 
                                 {/* Stars */}

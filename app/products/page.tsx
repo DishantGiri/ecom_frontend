@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useCurrency } from "../components/CurrencyProvider";
-import { trackProductClick } from "../utils/tracking";
+
 import { apiFetch } from "../utils/apiFetch";
 
 
@@ -25,6 +25,7 @@ function ProductsContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [products, setProducts] = useState<any[]>([]);
+    const [fetchedCategories, setFetchedCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterCategory, setFilterCategory] = useState("All");
     const [sortBy, setSortBy] = useState("best-selling");
@@ -45,10 +46,6 @@ function ProductsContent() {
         "Supplements": {
             title: "Premium Supplements",
             description: "High-quality oral supplements formulated with clinically proven ingredients for nutritional balance."
-        },
-        "Injectables": {
-            title: "Clinical Injectables",
-            description: "Advanced clinical injectable solutions designed for rapid, targeted therapeutic outcomes."
         },
         "Wellness": {
             title: "Wellness & Lifestyle",
@@ -96,6 +93,16 @@ function ProductsContent() {
         fetchRecommendations();
     }, [apiHost, currency]);
 
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const data = await apiFetch<any[]>(`${apiHost}/api/categories`);
+            if (data) {
+                setFetchedCategories(data);
+            }
+        };
+        fetchCategories();
+    }, [apiHost]);
+
     // Close menus when clicking outside
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -108,9 +115,9 @@ function ProductsContent() {
     }, []);
 
     const categories = useMemo(() => {
-        const cats = new Set(products.map(p => p.category).filter(Boolean));
-        return ["All", ...Array.from(cats)];
-    }, [products]);
+        const cats = fetchedCategories.map(c => c.name);
+        return ["All", ...cats];
+    }, [fetchedCategories]);
 
     const maxProductPrice = useMemo(() => {
         if (products.length === 0) return 0;
@@ -122,7 +129,10 @@ function ProductsContent() {
 
         // Category Filter
         if (filterCategory !== "All") {
-            result = result.filter(p => p.category === filterCategory);
+            result = result.filter(p => {
+                const catName = typeof p.category === 'object' && p.category !== null ? p.category.name : p.category;
+                return catName === filterCategory;
+            });
         }
 
         // Availability Filter (Assuming most are in stock for now)
@@ -427,7 +437,6 @@ function ProductsContent() {
                                 href={`/products/${product.id}`}
                                 key={product.id}
                                 className="group block"
-                                onClick={() => trackProductClick(product.id)}
                             >
                                 <div className="relative aspect-square rounded-2xl bg-[#fcfcfc] overflow-hidden mb-5 border border-gray-50 transition-colors group-hover:border-navy/5">
                                     {/* Sale badge */}
@@ -518,7 +527,6 @@ function ProductsContent() {
                                     href={`/products/${product.id}`}
                                     key={`rec-${product.id}`}
                                     className="group block"
-                                    onClick={() => trackProductClick(product.id)}
                                 >
                                     <div className="relative aspect-square rounded-2xl bg-[#fcfcfc] overflow-hidden mb-5 border border-gray-50 transition-colors group-hover:border-navy/5">
                                         {product.discountedPrice < product.originalPrice && (

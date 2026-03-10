@@ -40,10 +40,10 @@ const Hero = () => {
                 </p>
 
                 {/* CTAs */}
-                <div className="flex flex-wrap gap-3 mb-12">
+                <div className="flex flex-col sm:flex-row gap-3 mb-12">
                     <Link
                         href="/products"
-                        className="inline-flex items-center gap-2 px-7 py-3.5 bg-accent-red text-white text-[13px] font-black uppercase tracking-widest rounded-xl hover:bg-white hover:text-navy transition-all duration-300 shadow-lg shadow-accent-red/25 group"
+                        className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-accent-red text-white text-[13px] font-black uppercase tracking-widest rounded-xl hover:bg-white hover:text-navy transition-all duration-300 shadow-lg shadow-accent-red/25 group"
                     >
                         Explore Now
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform duration-300">
@@ -52,7 +52,7 @@ const Hero = () => {
                     </Link>
                     <Link
                         href="/blogs"
-                        className="inline-flex items-center px-7 py-3.5 border border-white/20 text-white/80 hover:border-white hover:text-white text-[13px] font-black uppercase tracking-widest rounded-xl transition-all duration-300"
+                        className="inline-flex items-center justify-center px-7 py-3.5 border border-white/20 text-white/80 hover:border-white hover:text-white text-[13px] font-black uppercase tracking-widest rounded-xl transition-all duration-300"
                     >
                         Read Blogs
                     </Link>
@@ -80,7 +80,7 @@ const Hero = () => {
 
                 {/* Diagonal navy wedge bleeding from left */}
                 <div
-                    className="absolute left-0 top-0 h-full w-28 bg-navy z-10"
+                    className="absolute -left-1 top-0 h-full w-[116px] bg-navy z-10"
                     style={{ clipPath: "polygon(0 0, 100% 0, 60% 100%, 0 100%)" }}
                 />
 

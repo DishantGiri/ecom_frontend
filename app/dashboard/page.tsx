@@ -23,7 +23,7 @@ interface Product {
     starRating: number;
     originalPrice: number;
     discountedPrice: number;
-    category: string;
+    category: string | { id: number; name: string; imageUrl?: string };
     productLink: string;
     description?: string;
     highlights?: string;
@@ -44,7 +44,7 @@ export default function ProductsPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-    const [categories, setCategories] = useState<string[]>(["Supplements", "Injectables", "Wellness"]);
+    const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -53,7 +53,7 @@ export default function ProductsPage() {
         starRating: 5.0,
         originalPrice: 0,
         discountedPrice: 0,
-        category: "Supplements",
+        categoryId: null as number | null,
         productLink: "",
         description: "",
         highlights: "",
@@ -75,28 +75,42 @@ export default function ProductsPage() {
     const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
 
     useEffect(() => {
-        const storedCat = localStorage.getItem("ecom_categories");
-        if (storedCat) {
-            setCategories(JSON.parse(storedCat));
-        }
+        // Fetch categories for the dropdowns
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch(`${apiHost}/api/categories`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setCategories(data);
 
-        const checkAccess = () => {
+                    // If the current categoryId isn't in the fetched list, default to the first one or a placeholder
+                    setFormData(prev => {
+                        if (data.length > 0 && !data.some((c: any) => c.id === prev.categoryId)) {
+                            return { ...prev, categoryId: data[0].id };
+                        }
+                        return prev;
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching categories:", error);
+            }
+        };
+
+        const checkAccessAndFetch = async () => {
             const token = localStorage.getItem("ecom_token");
             const role = localStorage.getItem("ecom_role")?.trim().toUpperCase();
             const isAdmin = role === "ROLE_ADMIN" || role === "ADMIN";
 
             if (!token || !isAdmin) {
-                console.warn("[Products] Access Denied. Token exists:", !!token, "| Role found:", role);
                 router.push("/login");
-                return false;
+                return;
             }
-            return true;
+
+            await Promise.all([fetchProducts(), fetchCategories()]);
         };
 
-        if (checkAccess()) {
-            fetchProducts();
-        }
-    }, [router]);
+        checkAccessAndFetch();
+    }, [router, apiHost]);
 
     const getImageUrl = (url: string) => {
         if (!url) return "";
@@ -307,7 +321,7 @@ export default function ProductsPage() {
             starRating: 5.0,
             originalPrice: 0,
             discountedPrice: 0,
-            category: "Supplements",
+            categoryId: categories.length > 0 ? categories[0].id : null,
             productLink: "",
             description: "",
             highlights: "",
@@ -329,13 +343,18 @@ export default function ProductsPage() {
 
     const openEditModal = (product: Product) => {
         setEditingProduct(product);
+        // Find the category ID from the categories list
+        const categoryId = (typeof product.category === 'object' && product.category !== null)
+            ? product.category.id
+            : categories.find(c => c.name === product.category)?.id;
+
         setFormData({
             title: product.title,
             numberOfReviews: product.numberOfReviews,
             starRating: product.starRating,
             originalPrice: product.originalPrice,
             discountedPrice: product.discountedPrice,
-            category: product.category,
+            categoryId: categoryId || null,
             productLink: product.productLink,
             description: product.description || "",
             highlights: product.highlights || "",
@@ -448,7 +467,7 @@ export default function ProductsPage() {
                                         </td>
                                         <td className="px-5 py-3">
                                             <span className="px-3 py-1 bg-navy/5 text-navy text-[10px] font-black uppercase tracking-widest rounded-none">
-                                                {product.category}
+                                                {(typeof product.category === 'object' && product.category !== null) ? product.category.name : product.category}
                                             </span>
                                         </td>
                                         <td className="px-5 py-3">
@@ -495,216 +514,253 @@ export default function ProductsPage() {
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-[999] bg-navy/20 backdrop-blur-md flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[40px] shadow-2xl overflow-hidden flex flex-col scale-in-center animate-in duration-300">
-                        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <div>
-                                <h3 className="text-2xl font-black text-navy tracking-tight">
-                                    {editingProduct ? "Edit Product" : "Create New Product"}
-                                </h3>
-                                <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest mt-1">Fill in the details below</p>
+            {
+                isModalOpen && (
+                    <div className="fixed inset-0 z-[999] bg-navy/20 backdrop-blur-md flex items-center justify-center p-4">
+                        <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[40px] shadow-2xl overflow-hidden flex flex-col scale-in-center animate-in duration-300">
+                            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <div>
+                                    <h3 className="text-2xl font-black text-navy tracking-tight">
+                                        {editingProduct ? "Edit Product" : "Create New Product"}
+                                    </h3>
+                                    <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest mt-1">Fill in the details below</p>
+                                </div>
+                                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-navy/5 rounded-full transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                </button>
                             </div>
-                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-navy/5 rounded-full transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                            </button>
-                        </div>
 
-                        <div className="flex-1 overflow-auto p-8 space-y-10">
-                            <form id="productForm" onSubmit={handleSubmit} className="space-y-10">
-                                {/* Basic Info */}
-                                <div className="grid grid-cols-2 gap-8">
-                                    <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Product Title</label>
-                                        <input
-                                            type="text" required
-                                            value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="e.g. Nerve Freedom Pro"
-                                        />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Category</label>
-                                        <select
-                                            value={formData.category}
-                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all appearance-none"
-                                        >
-                                            {categories.map((cat, idx) => (
-                                                <option key={idx} value={cat}>{cat}</option>
-                                            ))}
-                                            {categories.length === 0 && <option value="Uncategorized">Uncategorized</option>}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Global Base Price ($)</label>
-                                        <input
-                                            type="number" step="0.01" required
-                                            value={isNaN(formData.originalPrice) ? '' : formData.originalPrice}
-                                            onChange={(e) => setFormData({ ...formData, originalPrice: parseFloat(e.target.value) || 0 })}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Global Sale Price ($)</label>
-                                        <input
-                                            type="number" step="0.01" required
-                                            value={isNaN(formData.discountedPrice) ? '' : formData.discountedPrice}
-                                            onChange={(e) => setFormData({ ...formData, discountedPrice: parseFloat(e.target.value) || 0 })}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Star Rating (0.5 increments)</label>
-                                        <input
-                                            type="number" step="0.5" min="0.5" max="5.0" required
-                                            value={isNaN(formData.starRating) ? '' : formData.starRating}
-                                            onChange={(e) => setFormData({ ...formData, starRating: parseFloat(e.target.value) || 5.0 })}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Number of Reviews</label>
-                                        <input
-                                            type="number" required
-                                            value={isNaN(formData.numberOfReviews) ? '' : formData.numberOfReviews}
-                                            onChange={(e) => setFormData({ ...formData, numberOfReviews: parseInt(e.target.value) || 0 })}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                        />
-                                    </div>
-                                    <div className="col-span-2 space-y-4">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1 flex items-center gap-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
-                                            Buy Now Link (URL)
-                                        </label>
-                                        <input
-                                            type="url"
-                                            value={formData.productLink}
-                                            onChange={(e) => setFormData({ ...formData, productLink: e.target.value })}
-                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
-                                            placeholder="https://yourcheckout.com/product-123"
-                                        />
-                                        <p className="text-[9px] text-navy/30 font-bold uppercase tracking-widest ml-1">This link opens when a customer clicks "Buy Now" on the product page</p>
-                                    </div>
-                                </div>
-
-                                {/* ── Content Sections (Draggable) ── */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-3">
-                                                <span className="w-8 h-px bg-navy/10"></span>
-                                                Product Content
-                                            </h4>
-                                            <p className="text-[10px] font-bold text-navy/30 uppercase tracking-widest mt-1 ml-11">Fill in content below · Drag cards to reorder sections on the product page</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-navy/5 rounded-full">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-navy/40"><path d="M7 15l5 5 5-5" /><path d="M7 9l5-5 5 5" /></svg>
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-navy/40">Drag to Reorder</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {formData.sectionOrder.map((sectionKey, idx) => {
-                                            const meta: any = {
-                                                description: { label: "Description", placeholder: "Enter product description (supports multiple lines)", fullWidth: true, emoji: "📝" },
-                                                highlights: { label: "Highlights", placeholder: "Enter highlights (one per line, e.g., 🧠 Supports healthy nerve function)", fullWidth: true, emoji: "✨" },
-                                                directions: { label: "Directions", placeholder: "Enter how to use the product", fullWidth: false, emoji: "📋" },
-                                                benefits: { label: "Benefits", placeholder: "Enter product benefits", fullWidth: false, emoji: "💪" },
-                                                guarantee: { label: "Guarantee", placeholder: "Enter money back guarantee text", fullWidth: false, emoji: "🛡️" },
-                                                shippingInfo: { label: "Shipping Info", placeholder: "Enter shipping information", fullWidth: false, emoji: "🚚" },
-                                            };
-
-                                            const section = meta[sectionKey];
-                                            if (!section) return null;
-
-                                            return (
-                                                <div
-                                                    key={sectionKey}
-                                                    draggable
-                                                    onDragStart={(e) => handleDragStart(e, sectionKey)}
-                                                    onDragOver={handleDragOver}
-                                                    onDrop={(e) => handleDrop(e, sectionKey)}
-                                                    className={`${section.fullWidth ? 'col-span-2' : 'col-span-2 md:col-span-1'
-                                                        } space-y-3 p-5 bg-gray-50/80 border-2 border-dashed border-gray-200 hover:border-navy/20 hover:bg-white active:border-accent-red/30 active:bg-accent-red/5 transition-all rounded-3xl cursor-grab active:cursor-grabbing group/section relative`}
-                                                >
-                                                    {/* Drag handle + label row */}
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-2">
-                                                            {/* Priority badge */}
-                                                            <span className="w-5 h-5 rounded-full bg-navy text-white text-[9px] font-black flex items-center justify-center flex-shrink-0">{idx + 1}</span>
-                                                            <span className="text-sm">{section.emoji}</span>
-                                                            <label className="text-[10px] font-black text-navy uppercase tracking-widest cursor-grab">{section.label}</label>
-                                                        </div>
-                                                        {/* Drag grip icon */}
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-navy/30 flex-shrink-0">
-                                                            <circle cx="9" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="19" r="1" />
-                                                            <circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" />
-                                                        </svg>
-                                                    </div>
-                                                    <textarea
-                                                        value={(formData as any)[sectionKey] || ""}
-                                                        onChange={(e) => setFormData({ ...formData, [sectionKey]: e.target.value })}
-                                                        rows={sectionKey === 'description' || sectionKey === 'highlights' ? 5 : 3}
-                                                        className="w-full bg-white border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-navy/20 transition-all shadow-sm resize-none"
-                                                        placeholder={section.placeholder}
-                                                        onDragStart={(e) => e.stopPropagation()}
-                                                        draggable={false}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Media */}
-                                <div className="space-y-6">
-                                    <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center">
-                                        <span className="w-8 h-px bg-navy/10 mr-4"></span>
-                                        Media & Assets
-                                    </h4>
+                            <div className="flex-1 overflow-auto p-8 space-y-10">
+                                <form id="productForm" onSubmit={handleSubmit} className="space-y-10">
+                                    {/* Basic Info */}
                                     <div className="grid grid-cols-2 gap-8">
                                         <div className="space-y-4">
-                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Main Hero Image (Feature)</label>
-                                            <div className="relative group cursor-pointer h-40">
-                                                <input
-                                                    type="file" accept="image/*"
-                                                    onChange={(e) => setFeatureImage(e.target.files?.[0] || null)}
-                                                    className="absolute inset-0 opacity-0 z-10 cursor-pointer"
-                                                />
-                                                <div className="h-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center transition-all group-hover:bg-gray-100 group-hover:border-navy/20 relative overflow-hidden">
-                                                    {(featureImage || (editingProduct && editingProduct.featureImageUrl)) ? (
-                                                        <img
-                                                            src={featureImage ? URL.createObjectURL(featureImage) : getImageUrl(editingProduct!.featureImageUrl)}
-                                                            className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
-                                                            alt=""
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Product Title</label>
+                                            <input
+                                                type="text" required
+                                                value={formData.title}
+                                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                placeholder="e.g. Nerve Freedom Pro"
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Category</label>
+                                            <select
+                                                value={formData.categoryId || ""}
+                                                onChange={(e) => setFormData({ ...formData, categoryId: parseInt(e.target.value) })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all appearance-none"
+                                            >
+                                                {categories.map((cat) => (
+                                                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                                ))}
+                                                {categories.length === 0 && <option value="">No Categories Found</option>}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Global Base Price ($)</label>
+                                            <input
+                                                type="number" step="0.01" required
+                                                value={isNaN(formData.originalPrice) ? '' : formData.originalPrice}
+                                                onChange={(e) => setFormData({ ...formData, originalPrice: parseFloat(e.target.value) || 0 })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Global Sale Price ($)</label>
+                                            <input
+                                                type="number" step="0.01" required
+                                                value={isNaN(formData.discountedPrice) ? '' : formData.discountedPrice}
+                                                onChange={(e) => setFormData({ ...formData, discountedPrice: parseFloat(e.target.value) || 0 })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Star Rating (0.5 increments)</label>
+                                            <input
+                                                type="number" step="0.5" min="0.5" max="5.0" required
+                                                value={isNaN(formData.starRating) ? '' : formData.starRating}
+                                                onChange={(e) => setFormData({ ...formData, starRating: parseFloat(e.target.value) || 5.0 })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Number of Reviews</label>
+                                            <input
+                                                type="number" required
+                                                value={isNaN(formData.numberOfReviews) ? '' : formData.numberOfReviews}
+                                                onChange={(e) => setFormData({ ...formData, numberOfReviews: parseInt(e.target.value) || 0 })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1 flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+                                                Buy Now Link (URL)
+                                            </label>
+                                            <input
+                                                type="url"
+                                                value={formData.productLink}
+                                                onChange={(e) => setFormData({ ...formData, productLink: e.target.value })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                placeholder="https://yourcheckout.com/product-123"
+                                            />
+                                            <p className="text-[9px] text-navy/30 font-bold uppercase tracking-widest ml-1">This link opens when a customer clicks "Buy Now" on the product page</p>
+                                        </div>
+                                    </div>
+
+                                    {/* ── Content Sections (Draggable) ── */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-3">
+                                                    <span className="w-8 h-px bg-navy/10"></span>
+                                                    Product Content
+                                                </h4>
+                                                <p className="text-[10px] font-bold text-navy/30 uppercase tracking-widest mt-1 ml-11">Fill in content below · Drag cards to reorder sections on the product page</p>
+                                            </div>
+                                            <div className="flex items-center gap-2 px-3 py-1.5 bg-navy/5 rounded-full">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-navy/40"><path d="M7 15l5 5 5-5" /><path d="M7 9l5-5 5 5" /></svg>
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-navy/40">Drag to Reorder</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {formData.sectionOrder.map((sectionKey, idx) => {
+                                                const meta: any = {
+                                                    description: { label: "Description", placeholder: "Enter product description (supports multiple lines)", fullWidth: true, emoji: "📝" },
+                                                    highlights: { label: "Highlights", placeholder: "Enter highlights (one per line, e.g., 🧠 Supports healthy nerve function)", fullWidth: true, emoji: "✨" },
+                                                    directions: { label: "Directions", placeholder: "Enter how to use the product", fullWidth: false, emoji: "📋" },
+                                                    benefits: { label: "Benefits", placeholder: "Enter product benefits", fullWidth: false, emoji: "💪" },
+                                                    guarantee: { label: "Guarantee", placeholder: "Enter money back guarantee text", fullWidth: false, emoji: "🛡️" },
+                                                    shippingInfo: { label: "Shipping Info", placeholder: "Enter shipping information", fullWidth: false, emoji: "🚚" },
+                                                };
+
+                                                const section = meta[sectionKey];
+                                                if (!section) return null;
+
+                                                return (
+                                                    <div
+                                                        key={sectionKey}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, sectionKey)}
+                                                        onDragOver={handleDragOver}
+                                                        onDrop={(e) => handleDrop(e, sectionKey)}
+                                                        className={`${section.fullWidth ? 'col-span-2' : 'col-span-2 md:col-span-1'
+                                                            } space-y-3 p-5 bg-gray-50/80 border-2 border-dashed border-gray-200 hover:border-navy/20 hover:bg-white active:border-accent-red/30 active:bg-accent-red/5 transition-all rounded-3xl cursor-grab active:cursor-grabbing group/section relative`}
+                                                    >
+                                                        {/* Drag handle + label row */}
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                {/* Priority badge */}
+                                                                <span className="w-5 h-5 rounded-full bg-navy text-white text-[9px] font-black flex items-center justify-center flex-shrink-0">{idx + 1}</span>
+                                                                <span className="text-sm">{section.emoji}</span>
+                                                                <label className="text-[10px] font-black text-navy uppercase tracking-widest cursor-grab">{section.label}</label>
+                                                            </div>
+                                                            {/* Drag grip icon */}
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-navy/30 flex-shrink-0">
+                                                                <circle cx="9" cy="5" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="19" r="1" />
+                                                                <circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" />
+                                                            </svg>
+                                                        </div>
+                                                        <textarea
+                                                            value={(formData as any)[sectionKey] || ""}
+                                                            onChange={(e) => setFormData({ ...formData, [sectionKey]: e.target.value })}
+                                                            rows={sectionKey === 'description' || sectionKey === 'highlights' ? 5 : 3}
+                                                            className="w-full bg-white border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-navy/20 transition-all shadow-sm resize-none"
+                                                            placeholder={section.placeholder}
+                                                            onDragStart={(e) => e.stopPropagation()}
+                                                            draggable={false}
                                                         />
-                                                    ) : null}
-                                                    <div className="relative z-1 flex flex-col items-center p-6">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-navy/20 mb-3"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
-                                                        <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest text-center">{featureImage ? featureImage.name : "Click to Upload / Change"}</p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Media */}
+                                    <div className="space-y-6">
+                                        <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center">
+                                            <span className="w-8 h-px bg-navy/10 mr-4"></span>
+                                            Media & Assets
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-8">
+                                            <div className="space-y-4">
+                                                <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Main Hero Image (Feature)</label>
+                                                <div className="relative group cursor-pointer h-40">
+                                                    <input
+                                                        type="file" accept="image/*"
+                                                        onChange={(e) => setFeatureImage(e.target.files?.[0] || null)}
+                                                        className="absolute inset-0 opacity-0 z-10 cursor-pointer"
+                                                    />
+                                                    <div className="h-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center transition-all group-hover:bg-gray-100 group-hover:border-navy/20 relative overflow-hidden">
+                                                        {(featureImage || (editingProduct && editingProduct.featureImageUrl)) ? (
+                                                            <img
+                                                                src={featureImage ? URL.createObjectURL(featureImage) : getImageUrl(editingProduct!.featureImageUrl)}
+                                                                className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+                                                                alt=""
+                                                            />
+                                                        ) : null}
+                                                        <div className="relative z-1 flex flex-col items-center p-6">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-navy/20 mb-3"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
+                                                            <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest text-center">{featureImage ? featureImage.name : "Click to Upload / Change"}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Gallery Images (Multiple)</label>
+
+                                                {(existingGalleryImages.length > 0 || galleryImages.length > 0) && (
+                                                    <div className="grid grid-cols-4 gap-4 mb-4">
+                                                        {existingGalleryImages.map((img, idx) => (
+                                                            <div key={`ext-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
+                                                                <img src={getImageUrl(img)} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+                                                                <button type="button" onClick={() => handleRemoveExistingImage('gallery', img)} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                        {galleryImages.map((file, idx) => (
+                                                            <div key={`new-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
+                                                                <img src={URL.createObjectURL(file)} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
+                                                                <button type="button" onClick={() => setGalleryImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                <div className="relative group cursor-pointer h-24">
+                                                    <input
+                                                        type="file" multiple accept="image/*"
+                                                        onChange={handleGalleryChange}
+                                                        className="absolute inset-0 opacity-0 z-10 cursor-pointer"
+                                                    />
+                                                    <div className="h-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center transition-all group-hover:bg-gray-100 group-hover:border-navy/20">
+                                                        <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest text-center">Click to Append More Files</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="space-y-4">
-                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Gallery Images (Multiple)</label>
+                                        <div className="space-y-4 pt-2">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">From the Manufacturer / Promotional Graphic Images (Multiple)</label>
 
-                                            {(existingGalleryImages.length > 0 || galleryImages.length > 0) && (
-                                                <div className="grid grid-cols-4 gap-4 mb-4">
-                                                    {existingGalleryImages.map((img, idx) => (
-                                                        <div key={`ext-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
+                                            {(existingPromotionalImages.length > 0 || promotionalImages.length > 0) && (
+                                                <div className="grid grid-cols-4 md:grid-cols-6 gap-4 mb-4">
+                                                    {existingPromotionalImages.map((img, idx) => (
+                                                        <div key={`ext-pro-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
                                                             <img src={getImageUrl(img)} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
-                                                            <button type="button" onClick={() => handleRemoveExistingImage('gallery', img)} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
+                                                            <button type="button" onClick={() => handleRemoveExistingImage('promotional', img)} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                                                             </button>
                                                         </div>
                                                     ))}
-                                                    {galleryImages.map((file, idx) => (
-                                                        <div key={`new-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
+                                                    {promotionalImages.map((file, idx) => (
+                                                        <div key={`new-pro-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
                                                             <img src={URL.createObjectURL(file)} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
-                                                            <button type="button" onClick={() => setGalleryImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
+                                                            <button type="button" onClick={() => setPromotionalImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                                                             </button>
                                                         </div>
@@ -712,172 +768,137 @@ export default function ProductsPage() {
                                                 </div>
                                             )}
 
-                                            <div className="relative group cursor-pointer h-24">
+                                            <div className="relative group cursor-pointer h-24 w-full">
                                                 <input
                                                     type="file" multiple accept="image/*"
-                                                    onChange={handleGalleryChange}
-                                                    className="absolute inset-0 opacity-0 z-10 cursor-pointer"
+                                                    onChange={handlePromotionalChange}
+                                                    className="absolute inset-0 opacity-0 z-10 cursor-pointer w-full h-full"
                                                 />
                                                 <div className="h-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center transition-all group-hover:bg-gray-100 group-hover:border-navy/20">
-                                                    <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest text-center">Click to Append More Files</p>
+                                                    <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest text-center">Click to Append Promotional Graphics</p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="space-y-4 pt-2">
-                                        <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">From the Manufacturer / Promotional Graphic Images (Multiple)</label>
 
-                                        {(existingPromotionalImages.length > 0 || promotionalImages.length > 0) && (
-                                            <div className="grid grid-cols-4 md:grid-cols-6 gap-4 mb-4">
-                                                {existingPromotionalImages.map((img, idx) => (
-                                                    <div key={`ext-pro-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
-                                                        <img src={getImageUrl(img)} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
-                                                        <button type="button" onClick={() => handleRemoveExistingImage('promotional', img)} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                {promotionalImages.map((file, idx) => (
-                                                    <div key={`new-pro-${idx}`} className="relative bg-gray-100 rounded-2xl aspect-square group/img">
-                                                        <img src={URL.createObjectURL(file)} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl" />
-                                                        <button type="button" onClick={() => setPromotionalImages(prev => prev.filter((_, i) => i !== idx))} className="absolute top-2 right-2 bg-accent-red text-white rounded-full p-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity drop-shadow-md">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        <div className="relative group cursor-pointer h-24 w-full">
-                                            <input
-                                                type="file" multiple accept="image/*"
-                                                onChange={handlePromotionalChange}
-                                                className="absolute inset-0 opacity-0 z-10 cursor-pointer w-full h-full"
-                                            />
-                                            <div className="h-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center transition-all group-hover:bg-gray-100 group-hover:border-navy/20">
-                                                <p className="text-[10px] font-black text-navy/40 uppercase tracking-widest text-center">Click to Append Promotional Graphics</p>
-                                            </div>
+                                    {/* Bundles/Offers */}
+                                    <div className="space-y-6">
+                                        <div className="flex justify-between items-center">
+                                            <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center">
+                                                <span className="w-8 h-px bg-navy/10 mr-4"></span>
+                                                Bundles & Offers
+                                            </h4>
+                                            <button
+                                                type="button" onClick={handleAddOffer}
+                                                className="text-[10px] font-black text-accent-red uppercase tracking-widest flex items-center space-x-2 hover:underline"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                                                <span>Add Bundle</span>
+                                            </button>
                                         </div>
-                                    </div>
-                                </div>
 
-                                {/* Bundles/Offers */}
-                                <div className="space-y-6">
-                                    <div className="flex justify-between items-center">
-                                        <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center">
-                                            <span className="w-8 h-px bg-navy/10 mr-4"></span>
-                                            Bundles & Offers
-                                        </h4>
-                                        <button
-                                            type="button" onClick={handleAddOffer}
-                                            className="text-[10px] font-black text-accent-red uppercase tracking-widest flex items-center space-x-2 hover:underline"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
-                                            <span>Add Bundle</span>
-                                        </button>
-                                    </div>
+                                        <div className="space-y-4">
+                                            {formData.offers.map((offer, idx) => (
+                                                <div key={idx} className="bg-gray-50 rounded-3xl p-6 relative border border-gray-100 group/offer">
+                                                    <button
+                                                        type="button" onClick={() => handleRemoveOffer(idx)}
+                                                        className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-100 rounded-full flex items-center justify-center text-accent-red shadow-lg hover:bg-accent-red hover:text-white transition-all opacity-0 group-hover/offer:opacity-100"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                                    </button>
 
-                                    <div className="space-y-4">
-                                        {formData.offers.map((offer, idx) => (
-                                            <div key={idx} className="bg-gray-50 rounded-3xl p-6 relative border border-gray-100 group/offer">
-                                                <button
-                                                    type="button" onClick={() => handleRemoveOffer(idx)}
-                                                    className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-100 rounded-full flex items-center justify-center text-accent-red shadow-lg hover:bg-accent-red hover:text-white transition-all opacity-0 group-hover/offer:opacity-100"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                                                </button>
-
-                                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                                    <div className="col-span-2 space-y-2">
-                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Offer Label</label>
-                                                        <input
-                                                            type="text" required
-                                                            value={offer.label}
-                                                            onChange={(e) => handleOfferChange(idx, "label", e.target.value)}
-                                                            className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
-                                                            placeholder="Buy 3 Get 2 Free"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Qty</label>
-                                                        <input
-                                                            type="number" required
-                                                            value={isNaN(offer.quantity) ? '' : offer.quantity}
-                                                            onChange={(e) => handleOfferChange(idx, "quantity", parseInt(e.target.value) || 0)}
-                                                            className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Original Price ($)</label>
-                                                        <input
-                                                            type="number" step="0.01"
-                                                            value={isNaN(offer.originalPrice) ? '' : offer.originalPrice}
-                                                            onChange={(e) => handleOfferChange(idx, "originalPrice", parseFloat(e.target.value) || 0)}
-                                                            className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
-                                                            placeholder="59.95"
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Sale Price ($)</label>
-                                                        <input
-                                                            type="number" step="0.01" required
-                                                            value={isNaN(offer.discountedPrice) ? '' : offer.discountedPrice}
-                                                            onChange={(e) => handleOfferChange(idx, "discountedPrice", parseFloat(e.target.value) || 0)}
-                                                            className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-accent-red"
-                                                            placeholder="24.95"
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-2 md:col-span-5 grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Bundle Image</label>
-                                                            <div className="relative">
-                                                                <input
-                                                                    type="file" accept="image/*"
-                                                                    onChange={(e) => handleOfferImageChange(idx, e.target.files?.[0]!)}
-                                                                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                                                />
-                                                                <div className="w-full bg-white rounded-xl p-3 text-[10px] font-bold text-navy/40 border-0 flex items-center justify-between">
-                                                                    <span className="truncate max-w-[150px]">{offerImages[idx] ? offerImages[idx].name : (offer.featureImageUrl ? "✓ Image Uploaded" : "Upload Bundle Image")}</span>
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
-                                                                </div>
-                                                            </div>
+                                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                                        <div className="col-span-2 space-y-2">
+                                                            <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Offer Label</label>
+                                                            <input
+                                                                type="text" required
+                                                                value={offer.label}
+                                                                onChange={(e) => handleOfferChange(idx, "label", e.target.value)}
+                                                                className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
+                                                                placeholder="Buy 3 Get 2 Free"
+                                                            />
                                                         </div>
-                                                        {offer.originalPrice > 0 && offer.discountedPrice > 0 && (
-                                                            <div className="flex items-end pb-0.5">
-                                                                <div className="w-full bg-green-50 rounded-xl p-3 border border-green-100">
-                                                                    <p className="text-[9px] font-black text-green-600 uppercase tracking-widest">Customer Saves</p>
-                                                                    <p className="text-sm font-black text-green-700">${(offer.originalPrice - offer.discountedPrice).toFixed(2)} USD</p>
+                                                        <div className="space-y-2">
+                                                            <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Qty</label>
+                                                            <input
+                                                                type="number" required
+                                                                value={isNaN(offer.quantity) ? '' : offer.quantity}
+                                                                onChange={(e) => handleOfferChange(idx, "quantity", parseInt(e.target.value) || 0)}
+                                                                className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Original Price ($)</label>
+                                                            <input
+                                                                type="number" step="0.01"
+                                                                value={isNaN(offer.originalPrice) ? '' : offer.originalPrice}
+                                                                onChange={(e) => handleOfferChange(idx, "originalPrice", parseFloat(e.target.value) || 0)}
+                                                                className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-navy"
+                                                                placeholder="59.95"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Sale Price ($)</label>
+                                                            <input
+                                                                type="number" step="0.01" required
+                                                                value={isNaN(offer.discountedPrice) ? '' : offer.discountedPrice}
+                                                                onChange={(e) => handleOfferChange(idx, "discountedPrice", parseFloat(e.target.value) || 0)}
+                                                                className="w-full bg-white rounded-xl p-3 text-xs font-bold border-0 focus:ring-1 focus:ring-accent-red"
+                                                                placeholder="24.95"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-2 md:col-span-5 grid grid-cols-2 gap-4">
+                                                            <div className="space-y-2">
+                                                                <label className="text-[9px] font-black text-navy/40 uppercase tracking-widest ml-1">Bundle Image</label>
+                                                                <div className="relative">
+                                                                    <input
+                                                                        type="file" accept="image/*"
+                                                                        onChange={(e) => handleOfferImageChange(idx, e.target.files?.[0]!)}
+                                                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                                    />
+                                                                    <div className="w-full bg-white rounded-xl p-3 text-[10px] font-bold text-navy/40 border-0 flex items-center justify-between">
+                                                                        <span className="truncate max-w-[150px]">{offerImages[idx] ? offerImages[idx].name : (offer.featureImageUrl ? "✓ Image Uploaded" : "Upload Bundle Image")}</span>
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        )}
+                                                            {offer.originalPrice > 0 && offer.discountedPrice > 0 && (
+                                                                <div className="flex items-end pb-0.5">
+                                                                    <div className="w-full bg-green-50 rounded-xl p-3 border border-green-100">
+                                                                        <p className="text-[9px] font-black text-green-600 uppercase tracking-widest">Customer Saves</p>
+                                                                        <p className="text-sm font-black text-green-700">${(offer.originalPrice - offer.discountedPrice).toFixed(2)} USD</p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            </form>
-                        </div>
+                                </form>
+                            </div>
 
-                        <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex justify-end space-x-4">
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="px-8 py-4 bg-white hover:bg-navy/5 text-navy font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all border border-gray-100"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                form="productForm" type="submit"
-                                disabled={loading}
-                                className="px-10 py-4 bg-navy hover:bg-accent-red text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-navy/20 flex items-center space-x-3"
-                            >
-                                {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
-                                <span>{editingProduct ? "Update Product" : "Save Product"}</span>
-                            </button>
+                            <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex justify-end space-x-4">
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-8 py-4 bg-white hover:bg-navy/5 text-navy font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all border border-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    form="productForm" type="submit"
+                                    disabled={loading}
+                                    className="px-10 py-4 bg-navy hover:bg-accent-red text-white font-black text-[10px] uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-navy/20 flex items-center space-x-3"
+                                >
+                                    {loading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                                    <span>{editingProduct ? "Update Product" : "Save Product"}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
