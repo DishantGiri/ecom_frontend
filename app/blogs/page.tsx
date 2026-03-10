@@ -16,7 +16,7 @@ interface Blog {
     updatedAt: string;
 }
 
-const apiHost = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:8080";
+const apiHost = process.env.NEXT_PUBLIC_API_HOST || "209.126.86.149:8083";
 
 function getImageUrl(url: string): string {
     if (!url) return "";

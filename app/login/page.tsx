@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isAdmin, setIsAdmin] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -14,6 +15,14 @@ export default function LoginPage() {
     });
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
+
+    useEffect(() => {
+        if (searchParams.get('unauthorized') === '1') {
+            toast.error("Access denied. Admin login required.");
+            // Pre-select admin login mode since they were trying to reach /dashboard
+            setIsAdmin(true);
+        }
+    }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -163,5 +172,13 @@ export default function LoginPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense>
+            <LoginForm />
+        </Suspense>
     );
 }
