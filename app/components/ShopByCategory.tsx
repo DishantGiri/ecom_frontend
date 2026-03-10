@@ -66,7 +66,7 @@ export default function ShopByCategory() {
         };
 
         fetchData();
-    }, [apiHost]);
+    }, []);
 
 
     return (
