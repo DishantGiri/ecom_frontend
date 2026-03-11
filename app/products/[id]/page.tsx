@@ -73,8 +73,17 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
     const { currencySymbol } = useCurrency();
     const [activeIndex, setActiveIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [isZoomed, setIsZoomed] = useState(false);
+    const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
     const thumbRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+        const x = ((e.clientX - left) / width) * 100;
+        const y = ((e.clientY - top) / height) * 100;
+        setZoomPos({ x, y });
+    };
 
     // Reset to first image whenever the images list changes (e.g. offer selected)
     useEffect(() => {
@@ -134,17 +143,35 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
                     }}
                 />
 
-                {/* Main Foreground Image — original ratio, floating with breathing room */}
-                <div className="relative z-10 w-full h-full p-8 flex items-center justify-center pointer-events-none">
-                    <img
-                        key={images[activeIndex]}
-                        src={images[activeIndex]}
-                        alt={title}
-                        className="max-w-full max-h-full object-contain transition-all duration-300 transform group-hover:scale-[1.02]"
+                {/* Main Foreground Image — with zoom on hover */}
+                <div
+                    className="absolute inset-8 z-10 flex items-center justify-center cursor-zoom-in group"
+                    onMouseEnter={() => setIsZoomed(true)}
+                    onMouseLeave={() => {
+                        setIsZoomed(false);
+                        setTimeout(() => setZoomPos({ x: 50, y: 50 }), 300);
+                    }}
+                    onMouseMove={handleMouseMove}
+                >
+                    <div
+                        className="w-full h-full"
                         style={{
-                            filter: "drop-shadow(0 20px 60px rgba(0,31,63,0.15))",
+                            transform: isZoomed ? "scale(2.2)" : "scale(1)",
+                            transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                            transition: isZoomed ? "transform 0.05s linear" : "transform 0.3s ease-out",
+                            willChange: "transform"
                         }}
-                    />
+                    >
+                        <img
+                            key={images[activeIndex]}
+                            src={images[activeIndex]}
+                            alt={title}
+                            className="w-full h-full object-contain pointer-events-none"
+                            style={{
+                                filter: "drop-shadow(0 20px 60px rgba(0,31,63,0.15))",
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* Save badge */}
