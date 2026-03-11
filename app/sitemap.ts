@@ -28,8 +28,18 @@ async function getBlogs(): Promise<{ slug: string; updatedAt?: string; createdAt
     }
 }
 
+async function getCategories(): Promise<{ id: number; name: string }[]> {
+    try {
+        const res = await fetch(`${apiHost}/api/categories`, { next: { revalidate: 3600 } });
+        if (!res.ok) return [];
+        return res.json();
+    } catch {
+        return [];
+    }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const [products, blogs] = await Promise.all([getProducts(), getBlogs()]);
+    const [products, blogs, categories] = await Promise.all([getProducts(), getBlogs(), getCategories()]);
 
     // Static pages
     const staticRoutes: MetadataRoute.Sitemap = [
@@ -85,5 +95,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
     }));
 
-    return [...staticRoutes, ...productRoutes, ...blogRoutes];
+    // Category pages
+    const categoryRoutes: MetadataRoute.Sitemap = categories.map((cat) => ({
+        url: `${siteUrl}/products?category=${encodeURIComponent(cat.name)}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+    }));
+
+    return [...staticRoutes, ...productRoutes, ...blogRoutes, ...categoryRoutes];
 }

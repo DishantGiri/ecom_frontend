@@ -60,6 +60,29 @@ export default async function BlogsPage({ searchParams }: { searchParams: { topi
 
     return (
         <div className="min-h-screen bg-[#FDFDFD] font-sans pb-24">
+            {/* Blog Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Blog",
+                        "name": "Health & Wellness Journal",
+                        "description": "Expert insights, wellness tips, and science-backed protocols for a better you.",
+                        "url": `${apiHost}/blogs`,
+                        "blogPost": blogs.slice(0, 10).map(blog => ({
+                            "@type": "BlogPosting",
+                            "headline": blog.title,
+                            "url": `${apiHost}/blogs/${blog.slug}`,
+                            "datePublished": blog.createdAt,
+                            "author": {
+                                "@type": "Person",
+                                "name": blog.author
+                            }
+                        }))
+                    })
+                }}
+            />
             {/* Header */}
             <header className="bg-white border-b border-gray-100 pt-8 pb-16 px-6 md:px-12">
                 <div className="max-w-[1440px] mx-auto text-center">

@@ -184,6 +184,28 @@ function ProductsContent() {
 
     return (
         <main className="min-h-screen bg-white pb-20 pt-10">
+            {/* CollectionPage Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "CollectionPage",
+                        "name": CATEGORY_INFO[filterCategory]?.title || filterCategory,
+                        "description": CATEGORY_INFO[filterCategory]?.description || "Discover our premium selection of medical-grade health products.",
+                        "url": typeof window !== "undefined" ? window.location.href : "",
+                        "mainEntity": {
+                            "@type": "ItemList",
+                            "itemListElement": filteredProducts.slice(0, 20).map((p, i) => ({
+                                "@type": "ListItem",
+                                "position": i + 1,
+                                "url": `${typeof window !== "undefined" ? window.location.origin : ""}/products/${p.id}`,
+                                "name": p.title
+                            }))
+                        }
+                    })
+                }}
+            />
             <div className="max-w-[1440px] mx-auto px-6 md:px-12">
 
                 {/* ── SEARCH RESULTS HEADER (When 'q' is present) ── */}

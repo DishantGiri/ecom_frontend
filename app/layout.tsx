@@ -24,6 +24,45 @@ export default function RootLayout({
         <LanguageProvider>
           <CurrencyProvider>
             <ToasterProvider />
+            {/* Global SEO Schema */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "Organization",
+                  "name": "Lorem",
+                  "url": "http://209.126.86.149:3083",
+                  "logo": "http://209.126.86.149:3083/logo.png",
+                  "description": "Premium health and wellness supplements for optimal performance.",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "addressCountry": "US"
+                  },
+                  "contactPoint": {
+                    "@type": "ContactPoint",
+                    "contactType": "customer service",
+                    "email": "support@lorem.com"
+                  }
+                })
+              }}
+            />
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{
+                __html: JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "WebSite",
+                  "name": "Lorem",
+                  "url": "http://209.126.86.149:3083",
+                  "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "http://209.126.86.149:3083/products?q={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                  }
+                })
+              }}
+            />
             <Navbar />
             <ErrorBoundary>
               <main>

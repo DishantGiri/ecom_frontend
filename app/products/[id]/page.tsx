@@ -502,7 +502,7 @@ export default function ProductPage() {
                         "image": getImageUrl(product.featureImageUrl),
                         "description": product.description?.replace(/<[^>]+>/g, "") || product.title,
                         "sku": String(product.id),
-                        "brand": { "@type": "Brand", "name": "Lively Vita" },
+                        "brand": { "@type": "Brand", "name": "LOREM" },
                         "aggregateRating": product.numberOfReviews > 0 ? {
                             "@type": "AggregateRating",
                             "ratingValue": product.starRating,
@@ -515,7 +515,7 @@ export default function ProductPage() {
                             "price": product.discountedPrice,
                             "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
                             "availability": "https://schema.org/InStock",
-                            "seller": { "@type": "Organization", "name": "Lively Vita" },
+                            "seller": { "@type": "Organization", "name": "LOREM" },
                             "shippingDetails": {
                                 "@type": "OfferShippingDetails",
                                 "shippingRate": {

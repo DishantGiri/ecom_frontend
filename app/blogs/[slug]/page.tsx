@@ -106,11 +106,11 @@ export default function BlogDetailsPage() {
                         "image": getImageUrl(blog.featureImageUrl),
                         "author": {
                             "@type": "Person",
-                            "name": blog.author || "Lively Vita"
+                            "name": blog.author || "LOREM"
                         },
                         "publisher": {
                             "@type": "Organization",
-                            "name": "Lively Vita",
+                            "name": "LOREM",
                             "logo": {
                                 "@type": "ImageObject",
                                 "url": `${typeof window !== "undefined" ? window.location.origin : ""}/logo.png`
