@@ -8,6 +8,14 @@ import toast from "react-hot-toast";
 import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../utils/auth";
 import { apiHost } from "../utils/apiHost";
 
+interface Review {
+    id: number;
+    reviewerName: string;
+    reviewText: string;
+    starRating: number;
+    imageUrl?: string;
+}
+
 interface Offer {
     id?: number;
     label: string;
@@ -21,6 +29,7 @@ interface Offer {
 interface Product {
     id: number;
     title: string;
+    ribbon?: string;
     numberOfReviews: number;
     starRating: number;
     originalPrice: number;
@@ -38,6 +47,7 @@ interface Product {
     galleryImageUrls: string[];
     promotionalImageUrls?: string[];
     offers: Offer[];
+    reviews?: Review[];
 }
 
 export default function ProductsPage() {
@@ -48,9 +58,15 @@ export default function ProductsPage() {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+    const totalPages = Math.ceil(products.length / itemsPerPage);
+    const currentProducts = products.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     // Form State
     const [formData, setFormData] = useState({
         title: "",
+        ribbon: "",
         numberOfReviews: 0,
         starRating: 5.0,
         originalPrice: 0,
@@ -73,6 +89,15 @@ export default function ProductsPage() {
     const [existingGalleryImages, setExistingGalleryImages] = useState<string[]>([]);
     const [existingPromotionalImages, setExistingPromotionalImages] = useState<string[]>([]);
     const [offerImages, setOfferImages] = useState<Record<number, File>>({});
+    const [snippets, setSnippets] = useState<{ id: number; name: string; content: string }[]>([]);
+
+    // Review Form State
+    const [reviewForm, setReviewForm] = useState({
+        reviewerName: "",
+        reviewText: "",
+        starRating: 5.0,
+        image: null as File | null
+    });
 
     useEffect(() => {
         // Fetch categories for the dropdowns
@@ -96,13 +121,26 @@ export default function ProductsPage() {
             }
         };
 
+        const fetchSnippets = async () => {
+            try {
+                const token = getTokenFromCookie();
+                const response = await fetch(`${apiHost}/api/admin/snippets`, { headers: { Authorization: `Bearer ${token}` } });
+                if (response.ok) {
+                    const data = await response.json();
+                    setSnippets(data);
+                }
+            } catch (error) {
+                console.error("Error fetching snippets:", error);
+            }
+        };
+
         const checkAccessAndFetch = async () => {
             const token = getTokenFromCookie();
             if (!token || !isAdminFromCookie()) {
                 router.push("/login");
                 return;
             }
-            await Promise.all([fetchProducts(), fetchCategories()]);
+            await Promise.all([fetchProducts(), fetchCategories(), fetchSnippets()]);
         };
 
         checkAccessAndFetch();
@@ -247,6 +285,45 @@ export default function ProductsPage() {
         setOfferImages({ ...offerImages, [index]: file });
     };
 
+    const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const confirmUpload = window.confirm(`Are you sure you want to bulk upload products from ${file.name}?`);
+        if (!confirmUpload) {
+            e.target.value = ""; // Reset input
+            return;
+        }
+
+        const loadingToast = toast.loading("Processing bulk upload...");
+        try {
+            const token = getTokenFromCookie();
+            const form = new FormData();
+            form.append("file", file);
+
+            const response = await fetch(`${apiHost}/api/admin/products/bulk-upload`, {
+                method: "POST",
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: form
+            });
+
+            if (response.ok) {
+                toast.success("Bulk upload completed successfully", { id: loadingToast });
+                fetchProducts();
+            } else {
+                const error = await response.json();
+                toast.error(error.message || "Failed to process bulk upload", { id: loadingToast });
+            }
+        } catch (error) {
+            console.error("Error during bulk upload:", error);
+            toast.error("An error occurred during bulk upload", { id: loadingToast });
+        } finally {
+            e.target.value = ""; // Reset input
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -310,9 +387,79 @@ export default function ProductsPage() {
         }
     };
 
+    const handleAddReview = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingProduct) return;
+
+        const loadingToast = toast.loading("Adding review...");
+        try {
+            const token = getTokenFromCookie();
+            const form = new FormData();
+            form.append("reviewerName", reviewForm.reviewerName);
+            form.append("reviewText", reviewForm.reviewText);
+            form.append("starRating", reviewForm.starRating.toString());
+            if (reviewForm.image) {
+                form.append("image", reviewForm.image);
+            }
+
+            const response = await fetch(`${apiHost}/api/admin/products/${editingProduct.id}/reviews`, {
+                method: "POST",
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: form
+            });
+
+            if (response.ok) {
+                toast.success("Review added successfully!", { id: loadingToast });
+                setReviewForm({ reviewerName: "", reviewText: "", starRating: 5.0, image: null });
+                // Re-fetch product data to update UI
+                const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.id}`);
+                if (refreshed.ok) {
+                    const data = await refreshed.json();
+                    setEditingProduct(data);
+                    // Also update in the main products list
+                    setProducts(products.map(p => p.id === data.id ? data : p));
+                }
+            } else {
+                toast.error("Failed to add review", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Error adding review", { id: loadingToast });
+        }
+    };
+
+    const handleDeleteReview = async (reviewId: number) => {
+        if (!confirm("Are you sure you want to delete this review?")) return;
+
+        const loadingToast = toast.loading("Deleting review...");
+        try {
+            const token = getTokenFromCookie();
+            const response = await fetch(`${apiHost}/api/admin/products/reviews/${reviewId}`, {
+                method: "DELETE",
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                toast.success("Review deleted", { id: loadingToast });
+                if (editingProduct) {
+                    const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.id}`);
+                    if (refreshed.ok) {
+                        const data = await refreshed.json();
+                        setEditingProduct(data);
+                        setProducts(products.map(p => p.id === data.id ? data : p));
+                    }
+                }
+            } else {
+                toast.error("Failed to delete review", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Error deleting review", { id: loadingToast });
+        }
+    };
+
     const resetForm = () => {
         setFormData({
             title: "",
+            ribbon: "",
             numberOfReviews: 0,
             starRating: 5.0,
             originalPrice: 0,
@@ -346,6 +493,7 @@ export default function ProductsPage() {
 
         setFormData({
             title: product.title,
+            ribbon: product.ribbon || "",
             numberOfReviews: product.numberOfReviews,
             starRating: product.starRating,
             originalPrice: product.originalPrice,
@@ -369,7 +517,7 @@ export default function ProductsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex font-sans">
+        <div className="h-screen bg-gray-50 flex font-sans overflow-hidden">
             {/* Sidebar (Simplified for now) */}
             <div className="w-64 bg-navy text-white flex flex-col p-6 space-y-8">
                 <div className="flex items-center space-x-3">
@@ -387,6 +535,10 @@ export default function ProductsPage() {
                     <Link href="/dashboard/blogs" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" /><path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" /></svg>
                         <span className="text-sm font-black uppercase tracking-widest text-[10px]">Blogs</span>
+                    </Link>
+                    <Link href="/dashboard/reviews" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M9 10h6" /><path d="M9 14h3" /></svg>
+                        <span className="text-sm font-black uppercase tracking-widest text-[10px]">Reviews</span>
                     </Link>
                     <Link href="/dashboard/analytics" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
@@ -413,13 +565,25 @@ export default function ProductsPage() {
                         <h2 className="text-4xl font-black text-navy tracking-tight">Product Management</h2>
                         <p className="text-navy/40 text-sm font-bold uppercase tracking-widest mt-1">Manage your inventory and bundles</p>
                     </div>
-                    <button
-                        onClick={() => { resetForm(); setIsModalOpen(true); }}
-                        className="bg-accent-red hover:bg-navy text-white px-8 py-4 rounded-none font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-accent-red/20 flex items-center space-x-3"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
-                        <span>Add New Product</span>
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <label className="cursor-pointer bg-white text-navy border-2 border-dashed border-navy/20 hover:border-navy px-6 py-4 rounded-none font-black uppercase tracking-widest text-xs transition-all shadow-sm flex items-center space-x-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
+                            <span>Bulk Upload CSV</span>
+                            <input
+                                type="file"
+                                accept=".csv"
+                                className="hidden"
+                                onChange={handleBulkUpload}
+                            />
+                        </label>
+                        <button
+                            onClick={() => { resetForm(); setIsModalOpen(true); }}
+                            className="bg-accent-red hover:bg-navy text-white px-8 py-4.5 rounded-none font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-accent-red/20 flex items-center space-x-3 h-full border-2 border-transparent"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                            <span>Add New Product</span>
+                        </button>
+                    </div>
                 </div>
 
                 {loading && !isModalOpen ? (
@@ -439,7 +603,7 @@ export default function ProductsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {products.map((product) => (
+                                {currentProducts.map((product) => (
                                     <tr key={product.id} className="group hover:bg-gray-50/30 transition-colors">
                                         <td className="px-5 py-3">
                                             <div className="flex items-center space-x-4">
@@ -503,6 +667,34 @@ export default function ProductsPage() {
                                 <p className="text-navy/30 font-black uppercase tracking-[0.2em] text-sm">No products found in inventory</p>
                             </div>
                         )}
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="p-5 border-t border-gray-100 flex items-center justify-between bg-gray-50/30">
+                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-navy/40">
+                                    Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, products.length)} of {products.length}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-4 py-2 bg-white border border-gray-200 text-navy font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                    >
+                                        Prev
+                                    </button>
+                                    <span className="px-4 py-2 bg-navy text-white font-bold text-[10px] uppercase tracking-widest">
+                                        {currentPage} / {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-4 py-2 bg-white border border-gray-200 text-navy font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -534,8 +726,18 @@ export default function ProductsPage() {
                                                 type="text" required
                                                 value={formData.title}
                                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
                                                 placeholder="e.g. Nerve Freedom Pro"
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Ribbon / Badge (Optional)</label>
+                                            <input
+                                                type="text"
+                                                value={formData.ribbon}
+                                                onChange={(e) => setFormData({ ...formData, ribbon: e.target.value })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                placeholder="e.g. #1 Best Seller"
                                             />
                                         </div>
                                         <div className="space-y-4">
@@ -543,7 +745,7 @@ export default function ProductsPage() {
                                             <select
                                                 value={formData.categoryId || ""}
                                                 onChange={(e) => setFormData({ ...formData, categoryId: parseInt(e.target.value) })}
-                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all appearance-none"
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all appearance-none"
                                             >
                                                 {categories.map((cat) => (
                                                     <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -557,7 +759,7 @@ export default function ProductsPage() {
                                                 type="number" step="0.01" required
                                                 value={isNaN(formData.originalPrice) ? '' : formData.originalPrice}
                                                 onChange={(e) => setFormData({ ...formData, originalPrice: parseFloat(e.target.value) || 0 })}
-                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
                                             />
                                         </div>
                                         <div className="space-y-4">
@@ -566,7 +768,7 @@ export default function ProductsPage() {
                                                 type="number" step="0.01" required
                                                 value={isNaN(formData.discountedPrice) ? '' : formData.discountedPrice}
                                                 onChange={(e) => setFormData({ ...formData, discountedPrice: parseFloat(e.target.value) || 0 })}
-                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
                                             />
                                         </div>
                                         <div className="space-y-4">
@@ -575,7 +777,7 @@ export default function ProductsPage() {
                                                 type="number" step="0.5" min="0.5" max="5.0" required
                                                 value={isNaN(formData.starRating) ? '' : formData.starRating}
                                                 onChange={(e) => setFormData({ ...formData, starRating: parseFloat(e.target.value) || 5.0 })}
-                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
                                             />
                                         </div>
                                         <div className="space-y-4">
@@ -584,7 +786,7 @@ export default function ProductsPage() {
                                                 type="number" required
                                                 value={isNaN(formData.numberOfReviews) ? '' : formData.numberOfReviews}
                                                 onChange={(e) => setFormData({ ...formData, numberOfReviews: parseInt(e.target.value) || 0 })}
-                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
                                             />
                                         </div>
                                         <div className="col-span-2 space-y-4">
@@ -596,7 +798,7 @@ export default function ProductsPage() {
                                                 type="url"
                                                 value={formData.productLink}
                                                 onChange={(e) => setFormData({ ...formData, productLink: e.target.value })}
-                                                className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
                                                 placeholder="https://yourcheckout.com/product-123"
                                             />
                                             <p className="text-[9px] text-navy/30 font-bold uppercase tracking-widest ml-1">This link opens when a customer clicks "Buy Now" on the product page</p>
@@ -633,6 +835,50 @@ export default function ProductsPage() {
                                                 const section = meta[sectionKey];
                                                 if (!section) return null;
 
+                                                const insertIconShortcode = (code: string) => {
+                                                    const el = document.getElementById(`textarea-${sectionKey}`) as HTMLTextAreaElement | null;
+                                                    const currentVal = (formData as any)[sectionKey] || "";
+                                                    if (!el) {
+                                                        setFormData({ ...formData, [sectionKey]: currentVal + (currentVal.endsWith('\n') || currentVal === '' ? '' : '\n') + code + ' ' });
+                                                        return;
+                                                    }
+                                                    const start = el.selectionStart;
+                                                    const end = el.selectionEnd;
+                                                    const before = currentVal.substring(0, start);
+                                                    const selected = currentVal.substring(start, end);
+                                                    const after = currentVal.substring(end);
+
+                                                    let textToInsert = '';
+                                                    if (selected) {
+                                                        textToInsert = selected.split('\n').map((line: string) => `${code} ${line}`).join('\n');
+                                                    } else {
+                                                        const prefix = (before.endsWith('\n') || before === '' ? '' : '\n');
+                                                        textToInsert = prefix + code + ' ';
+                                                    }
+
+                                                    setFormData({ ...formData, [sectionKey]: before + textToInsert + after });
+                                                    setTimeout(() => {
+                                                        el.focus();
+                                                        el.setSelectionRange(start, start + textToInsert.length);
+                                                    }, 0);
+                                                };
+
+                                                const insertTag = (prefix: string, suffix: string) => {
+                                                    const el = document.getElementById(`textarea-${sectionKey}`) as HTMLTextAreaElement | null;
+                                                    if (!el) return;
+                                                    const currentVal = (formData as any)[sectionKey] || "";
+                                                    const start = el.selectionStart;
+                                                    const end = el.selectionEnd;
+                                                    const before = currentVal.substring(0, start);
+                                                    const selected = currentVal.substring(start, end);
+                                                    const after = currentVal.substring(end);
+                                                    setFormData({ ...formData, [sectionKey]: before + prefix + selected + suffix + after });
+                                                    setTimeout(() => {
+                                                        el.focus();
+                                                        el.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+                                                    }, 0);
+                                                };
+
                                                 return (
                                                     <div
                                                         key={sectionKey}
@@ -657,11 +903,73 @@ export default function ProductsPage() {
                                                                 <circle cx="15" cy="5" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="19" r="1" />
                                                             </svg>
                                                         </div>
+
+                                                        {/* SVGs & Rich Text Toolbar */}
+                                                        <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-gray-200 pb-2 mb-1">
+                                                            {/* Text Format */}
+                                                            <button type="button" onClick={() => insertTag('<b>', '</b>')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 font-serif font-bold w-7" title="Bold">B</button>
+                                                            <button type="button" onClick={() => insertTag('<i>', '</i>')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 font-serif italic w-7" title="Italic">I</button>
+                                                            <button type="button" onClick={() => insertTag('<u>', '</u>')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 font-serif underline w-7 mr-2" title="Underline">U</button>
+
+                                                            <span className="text-[9px] font-bold text-navy/40 uppercase tracking-widest ml-1 hidden sm:inline-block">Format icons:</span>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:check]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Checkmark">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:star]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Star">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:arrow]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Arrow">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:zap]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Lightning">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:bullet]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Bullet Circle">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="8" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:number]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors text-[10px] font-black tracking-tighter w-6 flex items-center justify-center" title="Numbering">
+                                                                1.
+                                                            </button>
+                                                            {/* New Icons */}
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:heart]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Heart">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:shield]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Shield">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:leaf]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Leaf">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 14 6a7 7 0 0 1 7 7v7h-7a7 7 0 0 1-3.32-9.66L11 20z" /><path d="m2 22 5.5-5.5" /></svg>
+                                                            </button>
+                                                            <button type="button" onClick={() => insertIconShortcode('[icon:info]')} className="p-1.5 rounded bg-white border border-gray-200 text-navy hover:bg-navy/5 transition-colors" title="Info">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+                                                            </button>
+
+                                                            <div className="ml-auto min-w-[140px]">
+                                                                <select
+                                                                    onChange={(e) => {
+                                                                        if (e.target.value) {
+                                                                            const snippet = snippets.find(s => s.id === Number(e.target.value));
+                                                                            if (snippet) insertTag(snippet.content, "");
+                                                                            e.target.value = "";
+                                                                        }
+                                                                    }}
+                                                                    className="w-full bg-white border border-gray-200 rounded p-1.5 text-[10px] font-bold text-navy focus:ring-2 focus:ring-accent-red transition-all appearance-none outline-none pr-6 cursor-pointer"
+                                                                    style={{ backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="%23001F3F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>')`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+                                                                >
+                                                                    <option value="">+ Insert Snippet</option>
+                                                                    {snippets.map(s => (
+                                                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
                                                         <textarea
+                                                            id={`textarea-${sectionKey}`}
                                                             value={(formData as any)[sectionKey] || ""}
                                                             onChange={(e) => setFormData({ ...formData, [sectionKey]: e.target.value })}
-                                                            rows={sectionKey === 'description' || sectionKey === 'highlights' ? 5 : 3}
-                                                            className="w-full bg-white border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-navy/20 transition-all shadow-sm resize-none"
+                                                            rows={sectionKey === 'description' || sectionKey === 'highlights' ? 10 : 6}
+                                                            className="w-full bg-white border-0 rounded-2xl p-5 text-base font-medium focus:ring-2 focus:ring-navy/20 transition-all shadow-sm resize-y leading-[1.7]"
                                                             placeholder={section.placeholder}
                                                             onDragStart={(e) => e.stopPropagation()}
                                                             draggable={false}
@@ -871,6 +1179,99 @@ export default function ProductsPage() {
                                         </div>
                                     </div>
                                 </form>
+
+                                {editingProduct && (
+                                    <div className="pt-10 border-t border-gray-100 mt-10">
+                                        <h4 className="text-sm font-black text-navy uppercase tracking-widest flex items-center gap-3 mb-8">
+                                            <span className="w-8 h-px bg-navy/10"></span>
+                                            Customer Reviews ({editingProduct.reviews?.length || 0})
+                                        </h4>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                                            {editingProduct.reviews?.map((review) => (
+                                                <div key={review.id} className="bg-gray-50 rounded-3xl p-5 flex items-center justify-between group border border-gray-100">
+                                                    <div className="flex items-center gap-4">
+                                                        {review.imageUrl ? (
+                                                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-white border border-gray-100 flex-shrink-0">
+                                                                <img src={getImageUrl(review.imageUrl)} alt="" className="w-full h-full object-cover" />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-12 h-12 rounded-xl bg-navy/10 flex items-center justify-center font-black text-navy text-sm flex-shrink-0">
+                                                                {review.reviewerName.charAt(0)}
+                                                            </div>
+                                                        )}
+                                                        <div>
+                                                            <div className="text-[13px] font-black text-navy uppercase">{review.reviewerName}</div>
+                                                            <div className="flex items-center gap-1 mt-0.5">
+                                                                {[1, 2, 3, 4, 5].map((s) => (
+                                                                    <svg key={s} width="10" height="10" viewBox="0 0 24 24" fill={s <= review.starRating ? "#3D5BC9" : "none"} stroke={s <= review.starRating ? "none" : "#3D5BC920"} strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeleteReview(review.id)}
+                                                        className="p-3 bg-white hover:bg-red-50 text-red-500 rounded-xl transition-all border border-gray-100 shadow-sm opacity-0 group-hover:opacity-100"
+                                                        title="Delete Review"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="bg-navy rounded-[32px] p-8 text-white shadow-2xl shadow-navy/20 relative overflow-hidden">
+                                            <div className="relative z-10">
+                                                <h5 className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-6">Add Manual Review</h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                                    <div className="space-y-3">
+                                                        <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Reviewer Name</label>
+                                                        <input
+                                                            type="text" placeholder="e.g. John Doe"
+                                                            value={reviewForm.reviewerName}
+                                                            onChange={(e) => setReviewForm({ ...reviewForm, reviewerName: e.target.value })}
+                                                            className="w-full bg-white/10 border-0 rounded-2xl p-4 text-sm font-bold placeholder:text-white/20 focus:ring-2 focus:ring-accent-red transition-all"
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-3">
+                                                        <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Star Rating (0.5 increments)</label>
+                                                        <input
+                                                            type="number" step="0.5" min="0.5" max="5.0"
+                                                            value={reviewForm.starRating}
+                                                            onChange={(e) => setReviewForm({ ...reviewForm, starRating: parseFloat(e.target.value) || 5.0 })}
+                                                            className="w-full bg-white/10 border-0 rounded-2xl p-4 text-sm font-bold placeholder:text-white/20 focus:ring-2 focus:ring-accent-red transition-all"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-full space-y-3">
+                                                        <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Review Content</label>
+                                                        <textarea
+                                                            placeholder="What did the customer say?"
+                                                            value={reviewForm.reviewText}
+                                                            onChange={(e) => setReviewForm({ ...reviewForm, reviewText: e.target.value })}
+                                                            className="w-full bg-white/10 border-0 rounded-2xl p-5 text-sm font-bold placeholder:text-white/20 focus:ring-2 focus:ring-accent-red transition-all h-32"
+                                                        />
+                                                    </div>
+                                                    <div className="col-span-full space-y-3">
+                                                        <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Review Photo (Optional)</label>
+                                                        <input
+                                                            type="file" accept="image/*"
+                                                            onChange={(e) => setReviewForm({ ...reviewForm, image: e.target.files?.[0] || null })}
+                                                            className="w-full bg-white/10 border-0 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-white file:text-navy hover:file:bg-accent-red hover:file:text-white file:transition-all"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddReview}
+                                                    className="w-full bg-accent-red text-white text-[11px] font-black uppercase tracking-[0.2em] py-5 rounded-2xl hover:bg-white hover:text-navy transition-all shadow-xl shadow-accent-red/20"
+                                                >
+                                                    Post Manual Review
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex justify-end space-x-4">

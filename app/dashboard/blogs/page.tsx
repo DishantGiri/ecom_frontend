@@ -33,6 +33,11 @@ export default function BlogsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+    const totalPages = Math.ceil(blogs.length / itemsPerPage);
+    const currentBlogs = blogs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     const [formData, setFormData] = useState({
         title: "",
         intro: "",
@@ -184,7 +189,7 @@ export default function BlogsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex font-sans">
+        <div className="h-screen bg-gray-50 flex font-sans overflow-hidden">
             {/* Sidebar */}
             <div className="w-64 bg-navy text-white flex flex-col p-6 space-y-8">
                 <div className="flex items-center space-x-3">
@@ -202,6 +207,10 @@ export default function BlogsPage() {
                     <Link href="/dashboard/blogs" className="flex items-center space-x-3 p-3 rounded-xl bg-accent-red text-white shadow-lg shadow-accent-red/20 transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" /><path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" /></svg>
                         <span className="text-sm font-black uppercase tracking-widest text-[10px]">Blogs</span>
+                    </Link>
+                    <Link href="/dashboard/reviews" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M9 10h6" /><path d="M9 14h3" /></svg>
+                        <span className="text-sm font-black uppercase tracking-widest text-[10px]">Reviews</span>
                     </Link>
                     <Link href="/dashboard/analytics" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
@@ -257,7 +266,7 @@ export default function BlogsPage() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-50">
-                                        {blogs.map((blog) => (
+                                        {currentBlogs.map((blog) => (
                                             <tr key={blog.id} className="hover:bg-gray-50/50 transition-colors group">
                                                 <td className="px-5 py-3">
                                                     <div className="w-12 h-12 rounded-none bg-navy/5 flex items-center justify-center text-navy font-black text-[10px] group-hover:bg-accent-red group-hover:text-white transition-all overflow-hidden relative">
@@ -299,6 +308,34 @@ export default function BlogsPage() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="p-5 border-t border-gray-100 flex items-center justify-between bg-gray-50/30">
+                                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-navy/40">
+                                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, blogs.length)} of {blogs.length}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-4 py-2 bg-white border border-gray-200 text-navy font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Prev
+                                        </button>
+                                        <span className="px-4 py-2 bg-navy text-white font-bold text-[10px] uppercase tracking-widest">
+                                            {currentPage} / {totalPages}
+                                        </span>
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="px-4 py-2 bg-white border border-gray-200 text-navy font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

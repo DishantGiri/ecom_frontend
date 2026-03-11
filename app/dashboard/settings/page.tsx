@@ -17,7 +17,18 @@ export default function SettingsPage() {
     // Admin Account States
     const [emailData, setEmailData] = useState({ newEmail: "", password: "" });
     const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "" });
+
+    // Snippets States
+    const [snippets, setSnippets] = useState<{ id: number; name: string; content: string }[]>([]);
+    const [newSnippet, setNewSnippet] = useState({ name: "", content: "" });
+    const [editingSnippet, setEditingSnippet] = useState<{ id: number; name: string; content: string } | null>(null);
+
     const [loading, setLoading] = useState(false);
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
+    const totalPages = Math.ceil(categories.length / itemsPerPage);
+    const currentCategories = categories.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     const fetchCategories = async () => {
         try {
@@ -34,6 +45,21 @@ export default function SettingsPage() {
         }
     };
 
+    const fetchSnippets = async () => {
+        try {
+            const token = getTokenFromCookie();
+            const response = await fetch(`${apiHost}/api/admin/snippets`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setSnippets(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch snippets", error);
+        }
+    };
+
     // Load initial categories
     useEffect(() => {
         const checkAccess = () => {
@@ -46,6 +72,7 @@ export default function SettingsPage() {
 
         if (checkAccess()) {
             fetchCategories();
+            fetchSnippets();
         }
     }, [router]);
 
@@ -185,6 +212,77 @@ export default function SettingsPage() {
         }
     };
 
+    const handleCreateSnippet = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const loadingToast = toast.loading("Creating snippet...");
+        try {
+            const token = getTokenFromCookie();
+            const response = await fetch(`${apiHost}/api/admin/snippets`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(newSnippet)
+            });
+            if (response.ok) {
+                toast.success("Snippet created!", { id: loadingToast });
+                setNewSnippet({ name: "", content: "" });
+                fetchSnippets();
+            } else {
+                toast.error("Failed to create snippet", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Error creating snippet", { id: loadingToast });
+        }
+    };
+
+    const handleUpdateSnippet = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingSnippet) return;
+        const loadingToast = toast.loading("Updating snippet...");
+        try {
+            const token = getTokenFromCookie();
+            const response = await fetch(`${apiHost}/api/admin/snippets/${editingSnippet.id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(editingSnippet)
+            });
+            if (response.ok) {
+                toast.success("Snippet updated!", { id: loadingToast });
+                setEditingSnippet(null);
+                fetchSnippets();
+            } else {
+                toast.error("Failed to update snippet", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Error updating snippet", { id: loadingToast });
+        }
+    };
+
+    const handleDeleteSnippet = async (id: number) => {
+        if (!confirm("Are you sure?")) return;
+        const loadingToast = toast.loading("Deleting snippet...");
+        try {
+            const token = getTokenFromCookie();
+            const response = await fetch(`${apiHost}/api/admin/snippets/${id}`, {
+                method: "DELETE",
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                toast.success("Snippet deleted", { id: loadingToast });
+                fetchSnippets();
+            } else {
+                toast.error("Failed to delete snippet", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Error deleting snippet", { id: loadingToast });
+        }
+    };
+
     const getImageUrl = (url?: string) => {
         if (!url) return "";
         const full = url.startsWith("http") ? url : `${apiHost}/api/images/${url}`;
@@ -192,7 +290,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex font-sans">
+        <div className="h-screen bg-gray-50 flex font-sans overflow-hidden">
             {/* Sidebar */}
             <div className="w-64 bg-navy text-white flex flex-col p-6 space-y-8">
                 <div className="flex items-center space-x-3">
@@ -210,6 +308,10 @@ export default function SettingsPage() {
                     <Link href="/dashboard/blogs" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" /><path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" /></svg>
                         <span className="text-sm font-black uppercase tracking-widest text-[10px]">Blogs</span>
+                    </Link>
+                    <Link href="/dashboard/reviews" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><path d="M9 10h6" /><path d="M9 14h3" /></svg>
+                        <span className="text-sm font-black uppercase tracking-widest text-[10px]">Reviews</span>
                     </Link>
                     <Link href="/dashboard/analytics" className="flex items-center space-x-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg>
@@ -316,7 +418,7 @@ export default function SettingsPage() {
                             <div className="mt-8">
                                 <h4 className="text-[10px] font-black text-navy uppercase tracking-widest mb-4">Current Categories</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {categories.map((cat, idx) => (
+                                    {currentCategories.map((cat, idx) => (
                                         <div key={idx} className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm flex flex-col group relative">
                                             {/* Category Image */}
                                             <div className="w-full h-32 bg-gray-100 relative">
@@ -350,6 +452,150 @@ export default function SettingsPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="p-5 flex items-center justify-between border-t border-gray-100 mt-6 pt-6">
+                                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-navy/40">
+                                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, categories.length)} of {categories.length}
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className="px-4 py-2 bg-gray-50 border border-gray-200 text-navy font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 hover:bg-gray-100 transition-colors"
+                                            >
+                                                Prev
+                                            </button>
+                                            <span className="px-4 py-2 bg-navy text-white font-bold text-[10px] uppercase tracking-widest">
+                                                {currentPage} / {totalPages}
+                                            </span>
+                                            <button
+                                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="px-4 py-2 bg-gray-50 border border-gray-200 text-navy font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 hover:bg-gray-100 transition-colors"
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content Snippets Section */}
+                    <div className="bg-white p-8 border border-gray-100 shadow-sm rounded-none">
+                        <div className="space-y-6">
+                            <h3 className="text-lg font-black text-navy uppercase tracking-tighter flex items-center border-b border-gray-100 pb-4">
+                                <span className="w-6 h-px bg-accent-red mr-4"></span>
+                                Content Snippets
+                            </h3>
+                            <p className="text-xs font-bold uppercase tracking-widest text-navy/50">
+                                Reusable text blocks (HTML supported) that you can quickly insert while managing products.
+                            </p>
+
+                            {editingSnippet ? (
+                                <form onSubmit={handleUpdateSnippet} className="space-y-4 bg-gray-50 p-6 border-l-4 border-accent-red shadow-sm">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Snippet Name</label>
+                                        <input
+                                            type="text" required
+                                            value={editingSnippet.name}
+                                            onChange={(e) => setEditingSnippet({ ...editingSnippet, name: e.target.value })}
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Snippet Content (HTML Allowed)</label>
+                                        <textarea
+                                            required
+                                            value={editingSnippet.content}
+                                            onChange={(e) => setEditingSnippet({ ...editingSnippet, content: e.target.value })}
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red h-32"
+                                        />
+                                    </div>
+                                    <div className="flex gap-4 justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditingSnippet(null)}
+                                            className="bg-gray-200 hover:bg-gray-300 text-navy px-8 py-3 rounded-none font-black text-xs uppercase tracking-widest transition-all"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="bg-navy hover:bg-black text-white px-8 py-3 rounded-none font-black text-xs uppercase tracking-widest transition-all shadow-md"
+                                        >
+                                            Update Snippet
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <form onSubmit={handleCreateSnippet} className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Snippet Name</label>
+                                            <input
+                                                type="text" required
+                                                value={newSnippet.name}
+                                                onChange={(e) => setNewSnippet({ ...newSnippet, name: e.target.value })}
+                                                placeholder="e.g. Daily Bonus Note"
+                                                className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red"
+                                            />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <button
+                                                type="submit"
+                                                className="w-full bg-navy hover:bg-black text-white px-8 py-4 rounded-none font-black text-xs uppercase tracking-widest transition-all shadow-md"
+                                            >
+                                                Create Snippet
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Snippet Content</label>
+                                        <textarea
+                                            required
+                                            value={newSnippet.content}
+                                            onChange={(e) => setNewSnippet({ ...newSnippet, content: e.target.value })}
+                                            placeholder="Enter reusable text or HTML here..."
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red h-24"
+                                        />
+                                    </div>
+                                </form>
+                            )}
+
+                            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {snippets.map((s) => (
+                                    <div key={s.id} className="bg-white border border-gray-100 p-6 rounded-none shadow-sm flex flex-col justify-between group h-full">
+                                        <div className="space-y-2">
+                                            <h4 className="font-black text-xs text-navy uppercase tracking-widest">{s.name}</h4>
+                                            <div className="text-[10px] text-navy/40 line-clamp-3 font-mono bg-gray-50 p-3 rounded-none overflow-hidden">
+                                                {s.content}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                                onClick={() => setEditingSnippet(s)}
+                                                className="flex-1 py-2 text-[9px] font-black uppercase text-navy hover:bg-navy hover:text-white border border-navy/10 transition-all text-center"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteSnippet(s.id)}
+                                                className="flex-1 py-2 text-[9px] font-black uppercase text-accent-red hover:bg-accent-red hover:text-white border border-accent-red/10 transition-all text-center"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {snippets.length === 0 && (
+                                    <div className="col-span-full text-center p-8 bg-gray-50/10 border border-dashed border-gray-200">
+                                        <span className="text-[10px] font-black text-navy/20 uppercase tracking-[0.2em]">No snippets saved yet</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

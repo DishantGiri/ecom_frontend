@@ -21,6 +21,15 @@ interface Offer {
     featureImageUrl: string;
 }
 
+interface Review {
+    id: number;
+    reviewerName: string;
+    reviewText: string;
+    starRating: number;
+    imageUrl?: string;
+    createdAt?: string;
+}
+
 interface Product {
     id: number;
     title: string;
@@ -42,6 +51,8 @@ interface Product {
     sectionOrder?: string[];
     offers: Offer[];
     similarProducts: Product[] | null;
+    reviews?: Review[];
+    ribbon?: string;
 }
 
 function getImageUrl(url: string): string {
@@ -145,7 +156,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
 
                 {/* Main Foreground Image — with zoom on hover */}
                 <div
-                    className="absolute inset-8 z-10 flex items-center justify-center cursor-zoom-in group"
+                    className="absolute inset-4 z-10 flex items-center justify-center cursor-zoom-in group"
                     onMouseEnter={() => setIsZoomed(true)}
                     onMouseLeave={() => {
                         setIsZoomed(false);
@@ -354,8 +365,16 @@ export default function ProductPage() {
                 setProduct(data);
                 const mainImg = getImageUrl(data.featureImageUrl);
                 const gallery = [mainImg, ...(data.galleryImageUrls || []).map(getImageUrl)];
-                setGalleryImages(gallery);
-                if (data.offers?.length > 0) setSelectedOffer(data.offers[0]);
+
+                if (data.offers && data.offers.length > 0) {
+                    const firstOffer = data.offers.sort((a, b) => a.displayOrder - b.displayOrder)[0];
+                    setSelectedOffer(firstOffer);
+                    const offerMainImg = firstOffer.featureImageUrl ? getImageUrl(firstOffer.featureImageUrl) : mainImg;
+                    const deduplicatedGallery = [offerMainImg, ...gallery.filter(img => img !== offerMainImg)];
+                    setGalleryImages(deduplicatedGallery);
+                } else {
+                    setGalleryImages(gallery);
+                }
             } finally {
                 setLoading(false);
             }
@@ -375,10 +394,13 @@ export default function ProductPage() {
 
     const handleSelectOffer = (offer: Offer) => {
         setSelectedOffer(offer);
-        if (offer.featureImageUrl) {
-            const offerImg = getImageUrl(offer.featureImageUrl);
-            setGalleryImages((prev) => [offerImg, ...prev.filter((img) => img !== offerImg)]);
-        }
+        if (!product) return;
+        const baseMainImg = getImageUrl(product.featureImageUrl);
+        const baseGallery = [baseMainImg, ...(product.galleryImageUrls || []).map(getImageUrl)];
+
+        const offerMainImg = offer.featureImageUrl ? getImageUrl(offer.featureImageUrl) : baseMainImg;
+        const newGallery = [offerMainImg, ...baseGallery.filter((img) => img !== offerMainImg)];
+        setGalleryImages(newGallery);
     };
 
     const handleBuyNow = () => {
@@ -407,6 +429,64 @@ export default function ProductPage() {
         : product.originalPrice - product.discountedPrice;
     const displayPrice = selectedOffer ? selectedOffer.discountedPrice : product.discountedPrice;
     const displayOriginal = selectedOffer ? selectedOffer.originalPrice : product.originalPrice;
+
+    const renderLineWithIcon = (line: string, index: number, defaultType: string, liClassName: string, textClassName: string) => {
+        const trimmedLine = line.trim();
+        const match = trimmedLine.match(/\[icon:([a-z]+)\]/i);
+        let iconType = defaultType;
+        let text = trimmedLine;
+
+        if (match) {
+            let parsedIconType = match[1].toLowerCase() as any;
+            if (parsedIconType === 'bullett') parsedIconType = 'bullet';
+            iconType = parsedIconType;
+            text = trimmedLine.replace(match[0], '').trim();
+        }
+
+        let iconElement = null;
+        switch (iconType) {
+            case 'check':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3D5BC9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>;
+                break;
+            case 'star':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
+                break;
+            case 'arrow':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3D5BC9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>;
+                break;
+            case 'zap':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>;
+                break;
+            case 'heart':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>;
+                break;
+            case 'shield':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3D5BC9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg>;
+                break;
+            case 'leaf':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><path d="M11 20A7 7 0 0 1 14 6a7 7 0 0 1 7 7v7h-7a7 7 0 0 1-3.32-9.66L11 20z" /><path d="m2 22 5.5-5.5" /></svg>;
+                break;
+            case 'info':
+                iconElement = <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>;
+                break;
+            case 'bullet':
+                iconElement = <span className="mt-[10px] w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />;
+                break;
+            case 'number':
+                iconElement = <span className="w-8 h-8 rounded-full border border-gray-300 text-[14px] font-semibold text-gray-500 flex items-center justify-center flex-shrink-0 mt-0.5">{index + 1}</span>;
+                break;
+            case 'none':
+            default:
+                break;
+        }
+
+        return (
+            <li key={index} className={liClassName}>
+                {iconElement}
+                <span className={textClassName} dangerouslySetInnerHTML={{ __html: text }} />
+            </li>
+        );
+    };
 
     return (
         <main className="min-h-screen font-sans" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #ffffff 40%, #f1f5f9 100%)" }}>
@@ -489,7 +569,7 @@ export default function ProductPage() {
 
             {/* Main Grid */}
             <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-10 lg:py-14">
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-10 lg:gap-16 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-8 lg:gap-10 items-start">
 
                     {/* LEFT — Image Gallery */}
                     <div className="lg:sticky lg:top-24">
@@ -501,7 +581,6 @@ export default function ProductPage() {
                     {/* RIGHT — Product Info */}
                     <ScrollReveal animation="right" delay={100}>
                         <div className="space-y-5">
-
                             {/* Category pill — Link to filtered results */}
                             <Link
                                 href={`/products?category=${encodeURIComponent((typeof product.category === 'object' && product.category !== null) ? product.category.name : (product.category as string))}`}
@@ -521,6 +600,12 @@ export default function ProductPage() {
                                 <StarRating rating={product.starRating} size={16} />
                                 <span className="text-sm font-medium text-navy/50">{product.numberOfReviews.toLocaleString()} reviews</span>
                             </div>
+
+                            {product.ribbon && (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent-red/10 border border-accent-red/10 rounded-full mt-2">
+                                    <span className="text-[9px] font-black text-accent-red uppercase tracking-widest">{product.ribbon}</span>
+                                </div>
+                            )}
 
                             {/* Price Section */}
                             <div className="space-y-3">
@@ -715,9 +800,13 @@ export default function ProductPage() {
                                     if (firstKey === "description") {
                                         return (
                                             <div className="text-navy/75 leading-relaxed text-[16px] space-y-4 pt-6">
-                                                {product.description?.split('\n').map((line, i) => (
-                                                    <p key={i}>{line}</p>
-                                                ))}
+                                                {product.description?.split('\n').filter(l => l.trim()).map((line, i) => {
+                                                    const trimmedLine = line.trim();
+                                                    if (/\[icon:/i.test(trimmedLine)) {
+                                                        return <ul key={i}>{renderLineWithIcon(trimmedLine, i, 'none', "flex items-start gap-3", "")}</ul>;
+                                                    }
+                                                    return <p key={i} dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                                })}
                                             </div>
                                         );
                                     }
@@ -725,11 +814,9 @@ export default function ProductPage() {
                                         return (
                                             <div className="text-navy/75 leading-snug text-[15px] space-y-1 pt-6">
                                                 <ul className="space-y-1 text-[15px] text-navy/80">
-                                                    {product.highlights?.split('\n').map((line, i) => (
-                                                        <li key={i} className="flex items-center gap-3">
-                                                            <span>{line}</span>
-                                                        </li>
-                                                    ))}
+                                                    {product.highlights?.split('\n').filter(l => l.trim()).map((line, i) =>
+                                                        renderLineWithIcon(line, i, 'bullet', "flex items-start gap-3", "")
+                                                    )}
                                                 </ul>
                                             </div>
                                         );
@@ -748,9 +835,13 @@ export default function ProductPage() {
                                                 <h4 className="text-[13px] font-black uppercase tracking-widest text-navy/60">{s.label}</h4>
                                             </div>
                                             <div className="text-navy/70 leading-relaxed text-[15px]">
-                                                {(product as any)[firstKey].split('\n').map((line: string, i: number) => (
-                                                    <p key={i}>{line}</p>
-                                                ))}
+                                                {/* If it's pure text separated by \n without list tags, we handle shortcodes as well if they exist */}
+                                                {(product as any)[firstKey].split('\n').filter((l: string) => l.trim()).map((line: string, i: number) => {
+                                                    const trimmedLine = line.trim();
+                                                    const isList = /\[icon:/i.test(trimmedLine);
+                                                    if (isList) return <ul key={i} className="mt-2 space-y-1">{renderLineWithIcon(trimmedLine, i, 'none', "flex items-start gap-3 text-navy/80", "")}</ul>;
+                                                    return <p key={i} dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                                })}
                                             </div>
                                         </div>
                                     );
@@ -764,8 +855,8 @@ export default function ProductPage() {
             </div>{/* end max-w-[1440px] */}
 
             {/* ─── Product Details ───────────────────────────────────────────────── */}
-            <div className="mt-16 md:mt-24 border-t border-gray-200 pt-12">
-                <div className="max-w-4xl mx-auto space-y-8">
+            <div className="mt-8 md:mt-12 border-t border-gray-200 pt-8">
+                <div className="max-w-4xl mx-auto space-y-6">
                     {(() => {
                         const order = product.sectionOrder || ["description", "highlights", "directions", "benefits", "guarantee", "shippingInfo"];
                         const firstKey = order.find(k => (product as any)[k]);
@@ -783,9 +874,13 @@ export default function ProductPage() {
                                             <h3 className="text-2xl font-semibold text-gray-900">Product Description</h3>
                                         </div>
                                         <div className="px-8 py-7 text-[18px] text-gray-700 leading-[1.85] space-y-4">
-                                            {product.description.split('\n').filter(l => l.trim()).map((line, i) => (
-                                                <p key={i}>{line}</p>
-                                            ))}
+                                            {product.description.split('\n').filter(l => l.trim()).map((line, i) => {
+                                                const trimmedLine = line.trim();
+                                                if (trimmedLine.startsWith('[icon:')) {
+                                                    return <ul key={i}>{renderLineWithIcon(trimmedLine, i, 'none', "flex items-start gap-4", "leading-[1.85]")}</ul>;
+                                                }
+                                                return <p key={i} dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                            })}
                                         </div>
                                     </div>
                                 );
@@ -801,12 +896,7 @@ export default function ProductPage() {
                                         </div>
                                         <div className="px-8 py-7">
                                             <ul className="space-y-4">
-                                                {lines.map((line, i) => (
-                                                    <li key={i} className="flex items-start gap-3 text-[18px] text-gray-700">
-                                                        <span className="mt-[10px] w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
-                                                        <span className="leading-relaxed">{line}</span>
-                                                    </li>
-                                                ))}
+                                                {lines.map((line, i) => renderLineWithIcon(line, i, 'bullet', "flex items-start gap-3 text-[18px] text-gray-700", "leading-relaxed"))}
                                             </ul>
                                         </div>
                                     </div>
@@ -823,12 +913,7 @@ export default function ProductPage() {
                                         </div>
                                         <div className="px-8 py-7">
                                             <ol className="space-y-4">
-                                                {steps.map((line, i) => (
-                                                    <li key={i} className="flex items-start gap-4 text-[18px] text-gray-700">
-                                                        <span className="w-8 h-8 rounded-full border border-gray-300 text-[14px] font-semibold text-gray-500 flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-                                                        <span className="leading-relaxed pt-1">{line}</span>
-                                                    </li>
-                                                ))}
+                                                {steps.map((line, i) => renderLineWithIcon(line, i, 'number', "flex items-start gap-4 text-[18px] text-gray-700", "leading-relaxed pt-1"))}
                                             </ol>
                                         </div>
                                     </div>
@@ -845,12 +930,7 @@ export default function ProductPage() {
                                         </div>
                                         <div className="px-8 py-7">
                                             <ul className="space-y-4">
-                                                {items.map((line, i) => (
-                                                    <li key={i} className="flex items-start gap-3 text-[18px] text-gray-700">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#001f3f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-[5px] flex-shrink-0"><polyline points="20 6 9 17 4 12" /></svg>
-                                                        <span className="leading-relaxed">{line}</span>
-                                                    </li>
-                                                ))}
+                                                {items.map((line, i) => renderLineWithIcon(line, i, 'check', "flex items-start gap-3 text-[18px] text-gray-700", "leading-relaxed"))}
                                             </ul>
                                         </div>
                                     </div>
@@ -867,9 +947,13 @@ export default function ProductPage() {
                                             <h3 className="text-2xl font-semibold text-gray-900">30-Day Money-Back Guarantee</h3>
                                         </div>
                                         <div className="px-8 py-7 space-y-4">
-                                            {lines.map((line, i) => (
-                                                <p key={i} className="text-[18px] text-gray-700 leading-relaxed">{line}</p>
-                                            ))}
+                                            {lines.map((line, i) => {
+                                                const trimmedLine = line.trim();
+                                                if (/\[icon:/i.test(trimmedLine)) {
+                                                    return <ul key={i}>{renderLineWithIcon(trimmedLine, i, 'none', "flex items-start gap-4 text-[18px] text-gray-700", "leading-relaxed")}</ul>;
+                                                }
+                                                return <p key={i} className="text-[18px] text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                            })}
                                         </div>
                                     </div>
                                 );
@@ -884,9 +968,13 @@ export default function ProductPage() {
                                             <h3 className="text-2xl font-semibold text-gray-900">Shipping & Delivery</h3>
                                         </div>
                                         <div className="px-8 py-7 space-y-4">
-                                            {lines.map((line, i) => (
-                                                <p key={i} className={`text-[18px] leading-relaxed ${i === 0 ? "font-semibold text-gray-800" : "text-gray-700"}`}>{line}</p>
-                                            ))}
+                                            {lines.map((line, i) => {
+                                                const trimmedLine = line.trim();
+                                                if (/\[icon:/i.test(trimmedLine)) {
+                                                    return <ul key={i}>{renderLineWithIcon(trimmedLine, i, 'none', `flex items-start gap-4 text-[18px] ${i === 0 ? "font-semibold text-gray-800" : "text-gray-700"}`, "leading-relaxed")}</ul>;
+                                                }
+                                                return <p key={i} className={`text-[18px] leading-relaxed ${i === 0 ? "font-semibold text-gray-800" : "text-gray-700"}`} dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                            })}
                                         </div>
                                     </div>
                                 );
@@ -928,7 +1016,7 @@ export default function ProductPage() {
 
             {/* From the Manufacturer / Promotional Graphic Images */}
             {product.promotionalImageUrls && product.promotionalImageUrls.length > 0 && (
-                <ScrollReveal animation="fade" threshold={0.01} className="mt-20 border-t border-gray-100 pt-16">
+                <ScrollReveal animation="fade" threshold={0.01} className="mt-8 border-t border-gray-100 pt-8">
                     <div className="max-w-[1440px] mx-auto px-6 md:px-12 space-y-4">
                         <h2 className="text-2xl font-black text-navy mb-8 block font-sans tracking-tight">
                             From the manufacturer
@@ -950,9 +1038,83 @@ export default function ProductPage() {
                 </ScrollReveal>
             )}
 
+            {/* Reviews Section */}
+            {product.reviews && product.reviews.length > 0 && (
+                <ScrollReveal animation="fade" threshold={0.01} className="mt-10 pb-16">
+                    <div className="max-w-[1440px] mx-auto px-6 md:px-12">
+
+                        {/* Section Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-10">
+                            <div>
+                                <p className="text-[10px] font-black text-accent-red uppercase tracking-[0.25em] mb-2">Customer Reviews</p>
+                                <h2 className="text-3xl lg:text-4xl font-black text-navy leading-tight">
+                                    What Our Customers Say
+                                </h2>
+                            </div>
+                            <div className="flex items-center gap-2 self-start sm:self-auto">
+                                <StarRating rating={product.starRating} size={16} />
+                                <span className="text-sm font-black text-navy">{product.starRating.toFixed(1)}</span>
+                                <span className="text-sm text-navy/30 font-bold">({product.numberOfReviews.toLocaleString()})</span>
+                            </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-px bg-gray-100 mb-10" />
+
+                        {/* Review Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {product.reviews.map((review) => (
+                                <div key={review.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
+
+                                    {/* Card Top Accent */}
+                                    <div className="h-1 bg-navy w-full" />
+
+                                    <div className="p-6 flex flex-col flex-1">
+                                        {/* Stars */}
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <StarRating rating={review.starRating} size={14} />
+                                            <span className="text-[10px] font-black text-navy/30 uppercase tracking-widest">{review.starRating.toFixed(1)}</span>
+                                        </div>
+
+                                        {/* Review Text */}
+                                        <p className="text-navy/75 text-[15px] leading-relaxed flex-1 mb-5">
+                                            &ldquo;{review.reviewText}&rdquo;
+                                        </p>
+
+                                        {/* Reviewer */}
+                                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                            <div className="flex items-center gap-3">
+                                                {review.imageUrl ? (
+                                                    <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-navy/10 flex-shrink-0">
+                                                        <img src={getImageUrl(review.imageUrl)} alt={review.reviewerName} className="w-full h-full object-cover" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center text-white text-[13px] font-black flex-shrink-0">
+                                                        {review.reviewerName.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="text-[13px] font-black text-navy leading-none">{review.reviewerName}</div>
+                                                    <div className="text-[9px] font-bold text-green-600 uppercase tracking-widest mt-0.5">✓ Verified</div>
+                                                </div>
+                                            </div>
+                                            {review.createdAt && (
+                                                <span className="text-[10px] font-bold text-navy/25">
+                                                    {new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </ScrollReveal>
+            )}
+
             {/* Similar Products / Recommended Section */}
             {((product.similarProducts && product.similarProducts.length > 0) || recommendations.length > 0) && (
-                <ScrollReveal animation="fade" threshold={0.01} className="mt-24 pt-12 border-t border-gray-100 pb-20">
+                <ScrollReveal animation="fade" threshold={0.01} className="mt-8 pt-8 border-t border-gray-100 pb-12">
                     <div className="max-w-[1440px] mx-auto px-6 md:px-12">
                         <div className="flex items-center justify-between mb-10">
                             <h2 className="text-3xl font-black text-navy tracking-tight">
