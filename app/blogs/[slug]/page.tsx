@@ -153,20 +153,20 @@ export default function BlogDetailsPage() {
                 {/* Intro subtitle */}
                 {blog.intro && (
                     <p className="text-[15px] text-gray-500 leading-relaxed mb-5 font-normal">
-                        {blog.intro}
+                        {blog.intro.replace(/&nbsp;/g, ' ')}
                     </p>
                 )}
 
                 {/* Author / Date row */}
-                <div className="flex items-center gap-5 text-[13px] text-gray-500 mb-5">
-                    <span className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-y-4 gap-x-4 md:gap-x-5 text-[13px] text-gray-500 mb-5">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap border-gray-200">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                             <circle cx="12" cy="7" r="4" />
                         </svg>
                         {blog.author || "Editorial Team"}
                     </span>
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                             <line x1="16" x2="16" y1="2" y2="6" />
@@ -175,14 +175,14 @@ export default function BlogDetailsPage() {
                         </svg>
                         {publishDate}
                     </span>
-                    <span className="flex items-center gap-1.5 text-gray-400">
+                    <span className="flex items-center gap-1.5 text-gray-400 whitespace-nowrap">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="10" />
                             <polyline points="12 6 12 12 16 14" />
                         </svg>
                         {minuteRead} min read
                     </span>
-                    <div className="ml-auto">
+                    <div className="ml-auto w-full sm:w-auto mt-2 sm:mt-0">
                         <ShareButtons title={blog.title} />
                     </div>
                 </div>
@@ -214,7 +214,7 @@ export default function BlogDetailsPage() {
                         }}
                     >
                         <p className="text-[15px] text-gray-600 leading-relaxed italic font-normal m-0">
-                            {blog.intro}
+                            {blog.intro.replace(/&nbsp;/g, ' ')}
                         </p>
                     </div>
                 )}

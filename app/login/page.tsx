@@ -49,6 +49,7 @@ function LoginForm() {
                 setAuthCookies(data.token, data.role, data.email);
 
                 setStatus("success");
+                setMessage("");
                 toast.success("Login successful!");
 
                 setTimeout(() => {
@@ -65,10 +66,12 @@ function LoginForm() {
                 }, 1500);
             } else {
                 setStatus("error");
+                setMessage("Incorrect email or password.");
                 toast.error("Invalid credentials. Please verify your email and password.");
             }
         } catch (err) {
             setStatus("error");
+            setMessage("Server connection failed. Please ensure the API is running.");
             toast.error("Server connection failed. Please ensure the API is running.");
         }
     };
@@ -87,6 +90,12 @@ function LoginForm() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        {status === "error" && message && (
+                            <div className="p-4 bg-accent-red/10 border border-accent-red/20 rounded-xl text-accent-red text-xs font-bold text-center animate-in fade-in slide-in-from-top-2">
+                                {message}
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Email Address</label>
                             <input

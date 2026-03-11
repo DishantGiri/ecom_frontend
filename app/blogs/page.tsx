@@ -137,7 +137,7 @@ export default async function BlogsPage({ searchParams }: { searchParams: { topi
 
                                     {blog.metaDescription && (
                                         <p className="text-[13px] text-navy/60 leading-relaxed font-medium line-clamp-2 mb-6">
-                                            {blog.metaDescription}
+                                            {blog.metaDescription.replace(/&nbsp;/g, ' ')}
                                         </p>
                                     )}
 

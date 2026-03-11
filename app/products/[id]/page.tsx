@@ -512,7 +512,7 @@ export default function ProductPage() {
                             </Link>
 
                             {/* Title */}
-                            <h1 className="text-2xl lg:text-3xl font-black text-navy leading-tight tracking-tight line-clamp-2">
+                            <h1 className="text-3xl lg:text-4xl font-semibold text-navy leading-tight tracking-tight line-clamp-2">
                                 {product.title}
                             </h1>
 
@@ -528,7 +528,7 @@ export default function ProductPage() {
                                     {displayOriginal > displayPrice && (
                                         <span className="text-lg font-medium text-navy/30 line-through">{currencySymbol}{displayOriginal.toFixed(2)} {currency}</span>
                                     )}
-                                    <span className="text-2xl font-black text-navy">{currencySymbol}{displayPrice.toFixed(2)} {currency}</span>
+                                    <span className="text-2xl font-bold text-navy">{currencySymbol}{displayPrice.toFixed(2)} {currency}</span>
                                     {displayOriginal > displayPrice && (
                                         <span className="bg-[#3D5BC9] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                             Sale

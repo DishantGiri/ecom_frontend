@@ -47,6 +47,14 @@ html {
   top: 0 !important;
 }
 
+button,
+a,
+input[type="submit"],
+input[type="button"],
+[role="button"] {
+  cursor: pointer !important;
+}
+
 /* Hide Google Translate UI Aggressively */
 .goog-te-banner-frame,
 .goog-te-banner-frame.skiptranslate,
