@@ -143,11 +143,12 @@ export default function NewArrivals() {
                                 {/* Front image — fills area, no shadow */}
                                 <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
                                     <div className="relative w-full h-full">
-                                        <img
+                                        <Image
                                             src={getImageUrl(product.featureImageUrl)}
                                             alt={product.title}
-                                            loading="lazy"
-                                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                                            fill
+                                            sizes="(max-width: 768px) 50vw, 25vw"
+                                            className="object-contain group-hover:scale-105 transition-transform duration-500"
                                         />
                                     </div>
                                 </div>
