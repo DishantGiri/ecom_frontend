@@ -601,11 +601,33 @@ export default function ProductPage() {
                                 <span className="text-sm font-medium text-navy/50">{product.numberOfReviews.toLocaleString()} reviews</span>
                             </div>
 
-                            {product.ribbon && (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent-red/10 border border-accent-red/10 rounded-full mt-2">
-                                    <span className="text-[9px] font-black text-accent-red uppercase tracking-widest">{product.ribbon}</span>
-                                </div>
-                            )}
+                            {/* Ribbon / Badge */}
+                            {product.ribbon && (() => {
+                                const catName = typeof product.category === "object" && product.category !== null
+                                    ? product.category.name
+                                    : product.category as string;
+                                return (
+                                    <div className="inline-flex items-center self-start">
+                                        <span className="inline-flex items-center gap-1.5 bg-accent-red text-white text-[11px] font-black uppercase tracking-widest px-3 py-1.5 shadow-md shadow-accent-red/30">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                            {product.ribbon}
+                                        </span>
+                                        {catName && (
+                                            <>
+                                                <span className="bg-accent-red/10 text-accent-red text-[11px] font-black uppercase tracking-widest px-2 py-1.5 border-l border-accent-red/20">
+                                                    in
+                                                </span>
+                                                <Link
+                                                    href={`/products?category=${encodeURIComponent(catName)}`}
+                                                    className="bg-accent-red/10 hover:bg-accent-red/20 text-accent-red text-[11px] font-black uppercase tracking-widest px-2 py-1.5 underline underline-offset-2 transition-colors"
+                                                >
+                                                    {catName}
+                                                </Link>
+                                            </>
+                                        )}
+                                    </div>
+                                );
+                            })()}
 
                             {/* Price Section */}
                             <div className="space-y-3">
