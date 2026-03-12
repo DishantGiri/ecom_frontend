@@ -3,10 +3,10 @@ import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import ScrollReveal from "./components/ScrollReveal";
 
-const BestSellers = dynamic(() => import("./components/BestSellers"), { ssr: false });
-const NewArrivals = dynamic(() => import("./components/NewArrivals"), { ssr: false });
-const ShopByCategory = dynamic(() => import("./components/ShopByCategory"), { ssr: false });
-const FAQ = dynamic(() => import("./components/FAQ"), { ssr: false });
+const BestSellers = dynamic(() => import("./components/BestSellers"));
+const NewArrivals = dynamic(() => import("./components/NewArrivals"));
+const ShopByCategory = dynamic(() => import("./components/ShopByCategory"));
+const FAQ = dynamic(() => import("./components/FAQ"));
 
 export default function Home() {
   return (
