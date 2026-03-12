@@ -542,23 +542,21 @@ export default function ProductClient() {
                                     ? product.category.name
                                     : product.category as string;
                                 return (
-                                    <div className="inline-flex items-center self-start">
-                                        <span className="inline-flex items-center gap-1.5 bg-accent-red text-white text-[11px] font-black uppercase tracking-widest px-3 py-1.5 shadow-md shadow-accent-red/30">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="inline-flex items-center gap-1.5 bg-[#E47911] text-white text-[12px] font-bold px-3 py-1 rounded-full shadow-sm">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
                                             {product.ribbon}
                                         </span>
                                         {catName && (
-                                            <>
-                                                <span className="bg-accent-red/10 text-accent-red text-[11px] font-black uppercase tracking-widest px-2 py-1.5 border-l border-accent-red/20">
-                                                    in
-                                                </span>
+                                            <span className="text-[13px] text-gray-600">
+                                                in{" "}
                                                 <Link
                                                     href={`/products?category=${encodeURIComponent(catName)}`}
-                                                    className="bg-accent-red/10 hover:bg-accent-red/20 text-accent-red text-[11px] font-black uppercase tracking-widest px-2 py-1.5 underline underline-offset-2 transition-colors"
+                                                    className="text-[#0066C0] hover:text-[#E47911] hover:underline transition-colors"
                                                 >
                                                     {catName}
                                                 </Link>
-                                            </>
+                                            </span>
                                         )}
                                     </div>
                                 );
