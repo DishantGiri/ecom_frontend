@@ -543,8 +543,7 @@ export default function ProductClient() {
                                     : product.category as string;
                                 return (
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="inline-flex items-center gap-1.5 bg-[#E47911] text-white text-[12px] font-bold px-3 py-1 rounded-full shadow-sm">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                                        <span className="inline-flex items-center bg-[#E47911] text-white text-[13px] font-bold px-2.5 py-0.5">
                                             {product.ribbon}
                                         </span>
                                         {catName && (
@@ -552,7 +551,7 @@ export default function ProductClient() {
                                                 in{" "}
                                                 <Link
                                                     href={`/products?category=${encodeURIComponent(catName)}`}
-                                                    className="text-[#0066C0] hover:text-[#E47911] hover:underline transition-colors"
+                                                    className="text-[#0066C0] hover:underline"
                                                 >
                                                     {catName}
                                                 </Link>
