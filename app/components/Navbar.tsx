@@ -227,7 +227,7 @@ const Navbar = () => {
                   }}
                   className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 text-navy rounded-xl font-bold text-[13px] cursor-pointer hover:bg-gray-100 transition-all group border border-gray-100 flex-shrink-0"
                 >
-                  <img src={`https://flagcdn.com/w20/${currentLanguageFlag}.png`} alt={currentLanguageName} className="w-5 h-auto object-cover rounded-sm flex-shrink-0" />
+                  <img src={`https://flagcdn.com/w20/${currentLanguageFlag}.png`} alt={currentLanguageName} width={20} height={15} className="w-5 h-[15px] object-cover rounded-sm flex-shrink-0" />
                   <span translate="no" className="text-[11px] font-black uppercase tracking-wide">{language.slice(0, 2)}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`opacity-50 group-hover:opacity-100 transition-transform flex-shrink-0 ${isLanguageOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
                 </div>
@@ -256,7 +256,7 @@ const Navbar = () => {
                           onClick={() => { setLanguage(lang.code); setIsLanguageOpen(false); }}
                           className={`w-full text-left px-4 py-2.5 flex items-center space-x-3 transition-colors ${language === lang.code ? 'bg-navy/5' : 'hover:bg-gray-50'}`}
                         >
-                          <img src={`https://flagcdn.com/w20/${lang.flag}.png`} alt={lang.name} className="w-5 h-auto object-cover rounded-sm flex-shrink-0" />
+                          <img src={`https://flagcdn.com/w20/${lang.flag}.png`} alt={lang.name} width={20} height={15} className="w-5 h-[15px] object-cover rounded-sm flex-shrink-0" />
                           <div className="flex flex-col">
                             <span className={`text-[13px] leading-tight ${language === lang.code ? 'font-black text-navy' : 'font-medium text-navy/80'}`}>{lang.name}</span>
                           </div>
@@ -273,7 +273,7 @@ const Navbar = () => {
                   onClick={() => { setIsCurrencyOpen(!isCurrencyOpen); setIsLanguageOpen(false); setIsAccountOpen(false); }}
                   className="flex items-center gap-1.5 px-3 py-2 bg-navy text-white rounded-xl font-bold text-[13px] cursor-pointer hover:bg-navy/90 transition-all group flex-shrink-0"
                 >
-                  <img src={`https://flagcdn.com/w20/${CURRENCIES.find(c => c.code === currency)?.flag || 'us'}.png`} alt={currency} className="w-5 h-auto object-cover rounded-sm flex-shrink-0" />
+                  <img src={`https://flagcdn.com/w20/${CURRENCIES.find(c => c.code === currency)?.flag || 'us'}.png`} alt={currency} width={20} height={15} className="w-5 h-[15px] object-cover rounded-sm flex-shrink-0" />
                   <span translate="no" className="text-[11px] font-black whitespace-nowrap">{currency}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`opacity-50 group-hover:opacity-100 transition-transform flex-shrink-0 ${isCurrencyOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6" /></svg>
                 </div>
@@ -291,7 +291,7 @@ const Navbar = () => {
                             onClick={() => { setCurrency(curr.code); setIsCurrencyOpen(false); }}
                             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all ${currency === curr.code ? 'bg-navy border-navy text-white shadow-lg shadow-navy/20' : 'bg-white border-gray-100 text-navy hover:border-gray-200 hover:bg-gray-50'}`}
                           >
-                            <img src={`https://flagcdn.com/w20/${curr.flag}.png`} alt="" className="w-5 h-auto rounded-sm flex-shrink-0" />
+                            <img src={`https://flagcdn.com/w20/${curr.flag}.png`} alt="" width={20} height={15} className="w-5 h-[15px] rounded-sm flex-shrink-0" />
                             <div className="flex flex-col min-w-0">
                               <span translate="no" className="text-[11px] font-black uppercase tracking-tight leading-none">{curr.code}</span>
                               <span translate="no" className={`text-[10px] font-medium truncate leading-tight mt-0.5 ${currency === curr.code ? 'text-white/60' : 'text-navy/40'}`}>{curr.symbol}</span>
@@ -436,7 +436,7 @@ const Navbar = () => {
                       onClick={() => setLanguage(lang.code)}
                       className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border text-left transition-all active:scale-95 ${language === lang.code ? 'bg-navy border-navy text-white shadow-lg shadow-navy/20' : 'bg-white border-gray-100 text-navy hover:border-gray-200 hover:bg-gray-50'}`}
                     >
-                      <img src={`https://flagcdn.com/w20/${lang.flag}.png`} alt="" className="w-5 h-auto rounded-sm flex-shrink-0" />
+                      <img src={`https://flagcdn.com/w20/${lang.flag}.png`} alt="" width={20} height={15} className="w-5 h-[15px] rounded-sm flex-shrink-0" />
                       <span className="text-[11px] font-bold uppercase tracking-tight truncate">{lang.name}</span>
                     </button>
                   ))}
@@ -453,7 +453,7 @@ const Navbar = () => {
                       onClick={() => setCurrency(curr.code)}
                       className={`flex flex-col items-center justify-center gap-1 py-3 px-2 rounded-xl border transition-all active:scale-95 ${currency === curr.code ? 'bg-navy border-navy text-white shadow-lg shadow-navy/20' : 'bg-white border-gray-100 text-navy hover:bg-gray-50 hover:border-gray-200'}`}
                     >
-                      <img src={`https://flagcdn.com/w20/${curr.flag}.png`} alt="" className="w-5 h-auto rounded-sm" />
+                      <img src={`https://flagcdn.com/w20/${curr.flag}.png`} alt="" width={20} height={15} className="w-5 h-[15px] rounded-sm" />
                       <span className="text-[9px] font-black uppercase tracking-wider leading-none">{curr.code}</span>
                     </button>
                   ))}

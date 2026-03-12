@@ -148,6 +148,7 @@ export default function BestSellers() {
                                         <img
                                             src={getImageUrl(product.featureImageUrl)}
                                             alt={product.title}
+                                            loading="lazy"
                                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                                         />
                                     </div>

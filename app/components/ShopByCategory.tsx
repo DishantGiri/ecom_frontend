@@ -97,6 +97,7 @@ export default function ShopByCategory() {
                                 <img
                                     src={cat.imageUrl || CATEGORY_IMAGES[cat.category_name] || CATEGORY_IMAGES["Default"]}
                                     alt={cat.category_name}
+                                    loading="lazy"
                                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 bg-gray-200"
                                     onError={(e) => {
                                         e.currentTarget.style.display = 'none';

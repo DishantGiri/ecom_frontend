@@ -1,10 +1,12 @@
 import JSX from "react";
+import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
-import ShopByCategory from "./components/ShopByCategory";
-import BestSellers from "./components/BestSellers";
-import NewArrivals from "./components/NewArrivals";
-import FAQ from "./components/FAQ";
 import ScrollReveal from "./components/ScrollReveal";
+
+const BestSellers = dynamic(() => import("./components/BestSellers"), { ssr: false });
+const NewArrivals = dynamic(() => import("./components/NewArrivals"), { ssr: false });
+const ShopByCategory = dynamic(() => import("./components/ShopByCategory"), { ssr: false });
+const FAQ = dynamic(() => import("./components/FAQ"), { ssr: false });
 
 export default function Home() {
   return (

@@ -6,7 +6,6 @@ import { CurrencyProvider } from "./components/CurrencyProvider";
 import { LanguageProvider } from "./components/LanguageProvider";
 import ToasterProvider from "./components/ToasterProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
-import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Lorem | Premium Supplements",
@@ -20,6 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="http://209.126.86.149:8083" />
+        <link rel="dns-prefetch" href="http://209.126.86.149:8083" />
+      </head>
       <body className="antialiased">
         <LanguageProvider>
           <CurrencyProvider>
@@ -72,36 +75,6 @@ export default function RootLayout({
             <Footer />
           </CurrencyProvider>
         </LanguageProvider>
-
-        {/* Google Translate Script */}
-        <Script
-          id="google-translate-script"
-          src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-          strategy="afterInteractive"
-        />
-        <Script id="google-translate-init" strategy="afterInteractive">
-          {`
-            function googleTranslateElementInit() {
-              new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-              }, 'google_translate_element');
-            }
-
-            // Force hide the google translate bar if it appears
-            const hideGoogleTranslateBar = () => {
-              const banner = document.querySelector('.goog-te-banner-frame');
-              if (banner) {
-                banner.style.display = 'none';
-                document.body.style.top = '0px';
-              }
-            };
-            
-            setInterval(hideGoogleTranslateBar, 500);
-          `}
-        </Script>
-        <div id="google_translate_element" style={{ display: 'none' }}></div>
       </body>
     </html>
   );

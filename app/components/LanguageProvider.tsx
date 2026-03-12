@@ -72,15 +72,10 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
         if (savedLang) {
             setLanguageState(savedLang);
         } else {
-            // Detect browser language
             const browserLang = navigator.language.split('-')[0];
             const supportedLang = LANGUAGES.find(l => l.code === browserLang);
-            if (supportedLang && supportedLang.code !== "en") {
+            if (supportedLang) {
                 setLanguageState(supportedLang.code);
-                document.cookie = `googtrans=/en/${supportedLang.code}; path=/`;
-                window.location.reload();
-            } else {
-                setLanguageState("en");
             }
         }
     }, []);
@@ -88,13 +83,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     const setLanguage = (code: string) => {
         setLanguageState(code);
         localStorage.setItem("preferred_language", code);
-
-        // Google Translate Cookie Trigger
-        const cookieValue = `/en/${code}`;
-        document.cookie = `googtrans=${cookieValue}; path=/`;
-
-        // Refresh to allow Google Translate to take effect immediately
-        window.location.reload();
     };
 
     const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
