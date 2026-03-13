@@ -155,7 +155,6 @@ const Navbar = () => {
         className={`fixed left-0 right-0 z-[999] w-full bg-white border-b border-gray-100 shadow-sm transition-transform duration-300 ease-in-out ${navVisible ? "translate-y-0" : "-translate-y-full"
           }`}
         style={{ top: `${navTop}px` }}
-        translate="no"
       >
         <div className="max-w-[1440px] mx-auto px-4 md:px-12 h-16 md:h-20 flex items-center justify-between gap-4 xl:gap-8">
 
@@ -171,7 +170,7 @@ const Navbar = () => {
           </div>
 
           {/* Logo — centered on mobile, left-aligned on desktop */}
-          <div className="flex-shrink-0 flex items-center space-x-2 md:space-x-3 absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
+          <div className="flex-shrink-0 flex items-center space-x-2 md:space-x-3 absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0" translate="no">
             <div className="bg-navy p-2 rounded-xl flex-shrink-0">
               <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-white font-black text-sm md:text-base italic">L</div>
             </div>
@@ -364,7 +363,7 @@ const Navbar = () => {
       </nav>
 
       {/* ── MOBILE SIDEBAR DRAWER ── */}
-      <div translate="no" className={`fixed inset-0 z-[1000] lg:hidden transition-all duration-500 ease-in-out ${isMenuOpen ? "visible" : "invisible"}`}>
+      <div className={`fixed inset-0 z-[1000] lg:hidden transition-all duration-500 ease-in-out ${isMenuOpen ? "visible" : "invisible"}`}>
         {/* Backdrop */}
         <div
           className={`absolute inset-0 bg-navy/60 backdrop-blur-sm transition-opacity duration-500 ${isMenuOpen ? "opacity-100" : "opacity-0"}`}

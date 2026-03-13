@@ -78,7 +78,44 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
                 setLanguageState(supportedLang.code);
             }
         }
+
+        // Initialize Google Translate
+        const addScript = () => {
+            const script = document.createElement("script");
+            script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+            script.async = true;
+            document.body.appendChild(script);
+            (window as any).googleTranslateElementInit = () => {
+                new (window as any).google.translate.TranslateElement(
+                    { pageLanguage: "en", autoDisplay: false },
+                    "google_translate_element"
+                );
+            };
+        };
+
+        if (!(window as any).googleTranslateElementInit) {
+            addScript();
+        }
     }, []);
+
+    useEffect(() => {
+        const translatePage = () => {
+            const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
+            if (select) {
+                select.value = language;
+                select.dispatchEvent(new Event("change"));
+            } else {
+                // Retry if the element isn't ready yet
+                setTimeout(translatePage, 1000);
+            }
+        };
+
+        // Update cookie as well for better persistence
+        document.cookie = `googtrans=/en/${language}; path=/; domain=${window.location.host}`;
+        document.cookie = `googtrans=/en/${language}; path=/`;
+
+        translatePage();
+    }, [language]);
 
     const setLanguage = (code: string) => {
         setLanguageState(code);
@@ -95,6 +132,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
             currentLanguageFlag: currentLang.flag
         }}>
             {children}
+            <div id="google_translate_element" style={{ display: 'none' }} />
         </LanguageContext.Provider>
     );
 };
