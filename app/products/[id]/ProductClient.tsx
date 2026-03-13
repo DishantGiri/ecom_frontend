@@ -61,15 +61,15 @@ function getImageUrl(url: string): string {
     return full.replace(/([^:])\/\/+/g, '$1/');
 }
 
-function StarRating({ rating, size = 13 }: { rating: number; size?: number }) {
+function StarRating({ rating, size = 18 }: { rating: number; size?: number }) {
     return (
         <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((s) => (
                 <svg key={s} width={size} height={size} viewBox="0 0 24 24">
                     <polygon
                         points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                        fill={s <= Math.ceil(rating) ? "#3D5BC9" : "none"}
-                        stroke="#3D5BC9"
+                        fill={s <= Math.floor(rating) ? "#FFA41C" : "none"}
+                        stroke="#FFA41C"
                         strokeWidth="1.5"
                     />
                 </svg>
@@ -532,8 +532,14 @@ export default function ProductClient() {
 
                             {/* Rating */}
                             <div className="flex items-center gap-2">
-                                <StarRating rating={product.starRating} size={16} />
-                                <span className="text-sm font-medium text-navy/50">{product.numberOfReviews.toLocaleString()} reviews</span>
+                                <span className="text-[17px] font-medium text-gray-700">{product.starRating.toFixed(1)}</span>
+                                <div className="flex items-center gap-1 group/rating cursor-pointer">
+                                    <StarRating rating={product.starRating} size={18} />
+                                    <svg className="w-4 h-4 text-gray-800 transition-transform group-hover/rating:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                                <span className="text-[14px] text-[#0066C0] hover:text-[#C7511F] hover:underline cursor-pointer">({product.numberOfReviews.toLocaleString()})</span>
                             </div>
 
                             {/* Ribbon / Badge */}
@@ -543,15 +549,15 @@ export default function ProductClient() {
                                     : product.category as string;
                                 return (
                                     <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="inline-flex items-center bg-[#E47911] text-white text-[13px] font-bold px-2.5 py-0.5">
+                                        <span className="inline-flex items-center bg-[#C45500] text-white text-[12px] font-bold px-2 py-0.5 rounded-[3px] shadow-sm">
                                             {product.ribbon}
                                         </span>
                                         {catName && (
-                                            <span className="text-[13px] text-gray-600">
+                                            <span className="text-[14px] text-gray-700">
                                                 in{" "}
                                                 <Link
                                                     href={`/products?category=${encodeURIComponent(catName)}`}
-                                                    className="text-[#0066C0] hover:underline"
+                                                    className="text-[#0066C0] hover:text-[#C7511F] hover:underline"
                                                 >
                                                     {catName}
                                                 </Link>
