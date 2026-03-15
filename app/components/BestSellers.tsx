@@ -147,7 +147,7 @@ export default function BestSellers() {
                                     <div className="relative w-full h-full">
                                         <Image
                                             src={getImageUrl(product.featureImageUrl)}
-                                            alt={product.title}
+                                            alt={product.title || "Loading..."}
                                             fill
                                             sizes="(max-width: 768px) 50vw, 25vw"
                                             className="object-contain group-hover:scale-105 transition-transform duration-500"
