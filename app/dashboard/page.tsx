@@ -624,7 +624,7 @@ export default function ProductsPage() {
                                             </div>
                                         </td>
                                         <td className="px-5 py-3">
-                                            <span className="px-3 py-1 bg-navy/5 text-navy text-[10px] font-black uppercase tracking-widest rounded-none">
+                                            <span className="px-3 py-1 bg-navy/5 text-navy text-[10px] font-black uppercase tracking-widest rounded-none inline-block max-w-[120px] truncate" title={(typeof product.category === 'object' && product.category !== null) ? product.category.name : (product.category as string)}>
                                                 {(typeof product.category === 'object' && product.category !== null) ? product.category.name : product.category}
                                             </span>
                                         </td>

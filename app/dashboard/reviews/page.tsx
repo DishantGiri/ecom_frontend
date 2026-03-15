@@ -296,7 +296,7 @@ export default function ReviewsPage() {
                                                             {review.reviewerName.charAt(0).toUpperCase()}
                                                         </div>
                                                     )}
-                                                    <span className="font-black text-navy text-[13px] whitespace-nowrap">{review.reviewerName}</span>
+                                                    <span className="font-black text-navy text-[13px] truncate max-w-[120px] md:max-w-[200px]" title={review.reviewerName}>{review.reviewerName}</span>
                                                 </div>
                                             </td>
                                             {/* Stars */}
@@ -309,12 +309,12 @@ export default function ReviewsPage() {
                                                 </div>
                                             </td>
                                             {/* Review text */}
-                                            <td className="px-6 py-3 max-w-xs">
-                                                <p className="text-navy/70 text-[13px] leading-snug line-clamp-2">{review.reviewText}</p>
+                                            <td className="px-6 py-3 max-w-[200px] md:max-w-xs">
+                                                <p className="text-navy/70 text-[13px] leading-snug line-clamp-2 break-words whitespace-pre-wrap">{review.reviewText}</p>
                                             </td>
                                             {/* Product */}
                                             <td className="px-6 py-3">
-                                                <span className="px-2.5 py-1 bg-navy/5 text-navy text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                                                <span className="px-2.5 py-1 bg-navy/5 text-navy text-[10px] font-black uppercase tracking-widest inline-block max-w-[150px] md:max-w-[250px] truncate md:whitespace-normal">
                                                     {review.productTitle || "—"}
                                                 </span>
                                             </td>

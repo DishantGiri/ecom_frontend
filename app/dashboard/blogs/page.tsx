@@ -277,9 +277,9 @@ export default function BlogsPage() {
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="px-5 py-3">
-                                                    <div className="font-bold text-sm text-navy">{blog.title}</div>
-                                                    <div className="text-[10px] text-navy/40 uppercase tracking-widest font-black mt-1">By {blog.author}</div>
+                                                <td className="px-5 py-3 max-w-[200px] md:max-w-md">
+                                                    <div className="font-bold text-sm text-navy truncate" title={blog.title}>{blog.title}</div>
+                                                    <div className="text-[10px] text-navy/40 uppercase tracking-widest font-black mt-1 truncate" title={blog.author}>By {blog.author}</div>
                                                 </td>
                                                 <td className="px-5 py-3">
                                                     <span className="px-3 py-1 bg-navy/5 text-navy text-[10px] font-black tracking-widest rounded-none">
