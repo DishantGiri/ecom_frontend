@@ -531,15 +531,86 @@ export default function ProductClient() {
                             </h1>
 
                             {/* Rating */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 relative group">
                                 <span className="text-[17px] font-medium text-gray-700">{product.starRating.toFixed(1)}</span>
-                                <div className="flex items-center gap-1 group/rating cursor-pointer">
+                                <div className="flex items-center gap-1 group/rating cursor-pointer peer">
                                     <StarRating rating={product.starRating} size={18} />
                                     <svg className="w-4 h-4 text-gray-800 transition-transform group-hover/rating:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </div>
                                 <span className="text-[14px] text-[#0066C0] hover:text-[#C7511F] hover:underline cursor-pointer">({product.numberOfReviews.toLocaleString()})</span>
+
+                                {/* Amazon-style Rating Popover */}
+                                <div className="absolute top-full left-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-2xl z-[100] p-6 opacity-0 translate-y-2 invisible group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible transition-all duration-300">
+                                    {/* Pointer */}
+                                    <div className="absolute -top-2 left-20 w-4 h-4 bg-white border-t border-l border-gray-200 rotate-45" />
+
+                                    <div className="relative z-10 space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <StarRating rating={product.starRating} size={20} />
+                                            <span className="text-lg font-black text-navy">{product.starRating.toFixed(1)} out of 5</span>
+                                        </div>
+
+                                        <p className="text-sm text-navy/50 font-medium">
+                                            {product.numberOfReviews.toLocaleString()} global ratings
+                                        </p>
+
+                                        <div className="space-y-2 pt-2">
+                                            {(() => {
+                                                // Generate a realistic-looking distribution that matches the starRating
+                                                const rating = product.starRating;
+                                                const id = product.id;
+
+                                                const weights = [5, 4, 3, 2, 1].map(s => {
+                                                    const dist = Math.abs(s - rating);
+                                                    // Exponential decay centered at the rating
+                                                    const baseWeight = Math.pow(0.12, dist);
+                                                    // Add some deterministic jitter based on product ID
+                                                    const jitter = (Math.abs(Math.sin(id * s * 4321.123)) * 0.08);
+                                                    // Add slightly more weight to 5-star and 1-star (Amazon patterns)
+                                                    const bias = s === 5 ? 0.15 : (s === 1 ? 0.05 : 0);
+                                                    return baseWeight + jitter + bias;
+                                                });
+
+                                                const totalWeight = weights.reduce((a, b) => a + b, 0);
+                                                const distribution = weights.map(w => (w / totalWeight) * 100);
+
+                                                return [5, 4, 3, 2, 1].map((stars, idx) => {
+                                                    const percentage = distribution[idx];
+
+                                                    return (
+                                                        <div key={stars} className="flex items-center gap-3 group/row cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-1 rounded transition-colors">
+                                                            <span className="text-sm font-medium text-[#0066C0] group-hover/row:underline w-12 whitespace-nowrap">{stars} star</span>
+                                                            <div className="flex-1 h-5 bg-gray-100 rounded border border-gray-200 overflow-hidden">
+                                                                <div
+                                                                    className="h-full bg-[#FFA41B] transition-all duration-500 ease-out"
+                                                                    style={{ width: `${percentage}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-sm font-medium text-[#0066C0] group-hover/row:underline w-10 text-right">{Math.round(percentage)}%</span>
+                                                        </div>
+                                                    );
+                                                });
+                                            })()}
+                                        </div>
+
+                                        <div className="pt-4 border-t border-gray-100">
+                                            <button
+                                                onClick={() => {
+                                                    const reviewsSection = document.getElementById('reviews');
+                                                    if (reviewsSection) {
+                                                        reviewsSection.scrollIntoView({ behavior: 'smooth' });
+                                                    }
+                                                }}
+                                                className="text-[14px] text-[#0066C0] hover:text-[#C7511F] hover:underline font-medium flex items-center justify-center w-full gap-2"
+                                            >
+                                                See customer reviews
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Ribbon / Badge */}
@@ -1000,76 +1071,78 @@ export default function ProductClient() {
 
             {/* Reviews Section */}
             {product.reviews && product.reviews.length > 0 && (
-                <ScrollReveal animation="fade" threshold={0.01} className="mt-10 pb-16">
-                    <div className="max-w-[1440px] mx-auto px-6 md:px-12">
+                <div id="reviews">
+                    <ScrollReveal animation="fade" threshold={0.01} className="mt-10 pb-16">
+                        <div className="max-w-[1440px] mx-auto px-6 md:px-12">
 
-                        {/* Section Header */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-10">
-                            <div>
-                                <p className="text-[10px] font-black text-accent-red uppercase tracking-[0.25em] mb-2">Customer Reviews</p>
-                                <h2 className="text-3xl lg:text-4xl font-black text-navy leading-tight">
-                                    What Our Customers Say
-                                </h2>
+                            {/* Section Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-10">
+                                <div>
+                                    <p className="text-[10px] font-black text-accent-red uppercase tracking-[0.25em] mb-2">Customer Reviews</p>
+                                    <h2 className="text-3xl lg:text-4xl font-black text-navy leading-tight">
+                                        What Our Customers Say
+                                    </h2>
+                                </div>
+                                <div className="flex items-center gap-2 self-start sm:self-auto">
+                                    <StarRating rating={product.starRating} size={16} />
+                                    <span className="text-sm font-black text-navy">{product.starRating.toFixed(1)}</span>
+                                    <span className="text-sm text-navy/30 font-bold">({product.numberOfReviews.toLocaleString()})</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 self-start sm:self-auto">
-                                <StarRating rating={product.starRating} size={16} />
-                                <span className="text-sm font-black text-navy">{product.starRating.toFixed(1)}</span>
-                                <span className="text-sm text-navy/30 font-bold">({product.numberOfReviews.toLocaleString()})</span>
-                            </div>
-                        </div>
 
-                        {/* Divider */}
-                        <div className="h-px bg-gray-100 mb-10" />
+                            {/* Divider */}
+                            <div className="h-px bg-gray-100 mb-10" />
 
-                        {/* Review Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                            {product.reviews.map((review) => (
-                                <div key={review.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
+                            {/* Review Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                {product.reviews.map((review) => (
+                                    <div key={review.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
 
-                                    {/* Card Top Accent */}
-                                    <div className="h-1 bg-navy w-full" />
+                                        {/* Card Top Accent */}
+                                        <div className="h-1 bg-navy w-full" />
 
-                                    <div className="p-6 flex flex-col flex-1">
-                                        {/* Stars */}
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <StarRating rating={review.starRating} size={14} />
-                                            <span className="text-[10px] font-black text-navy/30 uppercase tracking-widest">{review.starRating.toFixed(1)}</span>
-                                        </div>
-
-                                        {/* Review Text */}
-                                        <p className="text-navy/75 text-[15px] leading-relaxed flex-1 mb-5">
-                                            &ldquo;{review.reviewText}&rdquo;
-                                        </p>
-
-                                        {/* Reviewer */}
-                                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                            <div className="flex items-center gap-3">
-                                                {review.imageUrl ? (
-                                                    <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-navy/10 flex-shrink-0">
-                                                        <img src={getImageUrl(review.imageUrl)} alt={review.reviewerName} className="w-full h-full object-cover" />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center text-white text-[13px] font-black flex-shrink-0">
-                                                        {review.reviewerName.charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <div className="text-[13px] font-black text-navy leading-none">{review.reviewerName}</div>
-                                                    <div className="text-[9px] font-bold text-green-600 uppercase tracking-widest mt-0.5">✓ Verified</div>
-                                                </div>
+                                        <div className="p-6 flex flex-col flex-1">
+                                            {/* Stars */}
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <StarRating rating={review.starRating} size={14} />
+                                                <span className="text-[10px] font-black text-navy/30 uppercase tracking-widest">{review.starRating.toFixed(1)}</span>
                                             </div>
-                                            {review.createdAt && (
-                                                <span className="text-[10px] font-bold text-navy/25">
-                                                    {new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                                                </span>
-                                            )}
+
+                                            {/* Review Text */}
+                                            <p className="text-navy/75 text-[15px] leading-relaxed flex-1 mb-5">
+                                                &ldquo;{review.reviewText}&rdquo;
+                                            </p>
+
+                                            {/* Reviewer */}
+                                            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                                <div className="flex items-center gap-3">
+                                                    {review.imageUrl ? (
+                                                        <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-navy/10 flex-shrink-0">
+                                                            <img src={getImageUrl(review.imageUrl)} alt={review.reviewerName} className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-9 h-9 rounded-full bg-navy flex items-center justify-center text-white text-[13px] font-black flex-shrink-0">
+                                                            {review.reviewerName.charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <div className="text-[13px] font-black text-navy leading-none">{review.reviewerName}</div>
+                                                        <div className="text-[9px] font-bold text-green-600 uppercase tracking-widest mt-0.5">✓ Verified</div>
+                                                    </div>
+                                                </div>
+                                                {review.createdAt && (
+                                                    <span className="text-[10px] font-bold text-navy/25">
+                                                        {new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </ScrollReveal>
+                    </ScrollReveal>
+                </div>
             )}
 
             {/* Similar Products / Recommended Section */}
