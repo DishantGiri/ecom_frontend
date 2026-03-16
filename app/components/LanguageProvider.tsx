@@ -117,20 +117,29 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
         translatePage();
     }, [language]);
 
-    const setLanguage = (code: string) => {
-        setLanguageState(code);
-        localStorage.setItem("preferred_language", code);
-    };
+    const setLanguage = React.useCallback((code: string) => {
+        if (code !== language) {
+            setLanguageState(code);
+            localStorage.setItem("preferred_language", code);
+            // Force a reload to ensure Google Translate doesn't break React's DOM sync.
+            // This is the most reliable way to handle Google Translate integration.
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
+        }
+    }, [language]);
 
     const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
 
+    const contextValue = React.useMemo(() => ({
+        language,
+        setLanguage,
+        currentLanguageName: currentLang.name,
+        currentLanguageFlag: currentLang.flag
+    }), [language, setLanguage, currentLang.name, currentLang.flag]);
+
     return (
-        <LanguageContext.Provider value={{
-            language,
-            setLanguage,
-            currentLanguageName: currentLang.name,
-            currentLanguageFlag: currentLang.flag
-        }}>
+        <LanguageContext.Provider value={contextValue}>
             {children}
             <div id="google_translate_element" style={{ display: 'none' }} />
         </LanguageContext.Provider>

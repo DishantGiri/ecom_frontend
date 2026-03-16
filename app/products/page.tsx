@@ -355,7 +355,7 @@ function ProductsContent() {
                             {activeMenu === 'price' && (
                                 <div className="absolute top-full left-0 mt-8 w-96 bg-white shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
                                     <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-gray-100">
-                                        <span className="text-[15px] font-medium text-navy/70">
+                                        <span translate="no" className="notranslate text-[15px] font-medium text-navy/70">
                                             The highest price is {currencySymbol}{maxProductPrice.toFixed(2)}
                                         </span>
                                         <button onClick={resetPrice} className="text-[15px] font-medium text-navy underline underline-offset-4 decoration-1 decoration-navy/30 hover:decoration-navy transition-all">
@@ -365,7 +365,7 @@ function ProductsContent() {
                                     <div className="p-6">
                                         <div className="flex items-center gap-4">
                                             <div className="relative flex-1">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
+                                                <span translate="no" className="notranslate absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -380,7 +380,7 @@ function ProductsContent() {
                                                 />
                                             </div>
                                             <div className="relative flex-1">
-                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
+                                                <span translate="no" className="notranslate absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
                                                 <input
                                                     type="number"
                                                     min="0"
@@ -497,11 +497,11 @@ function ProductsContent() {
 
                                     <div className="flex items-baseline gap-2.5 pt-0.5">
                                         {product.originalPrice > product.discountedPrice && (
-                                            <span className="text-[13px] font-medium text-navy/20 line-through">
+                                            <span translate="no" className="notranslate text-[13px] font-medium text-navy/20 line-through">
                                                 {currencySymbol}{product.originalPrice.toFixed(2)} {currency}
                                             </span>
                                         )}
-                                        <span className="text-sm lg:text-base font-black text-navy">
+                                        <span translate="no" className="notranslate text-sm lg:text-base font-black text-navy">
                                             From {currencySymbol}{product.discountedPrice.toFixed(2)} {currency}
                                         </span>
                                     </div>
@@ -578,11 +578,11 @@ function ProductsContent() {
                                         </div>
                                         <div className="flex items-baseline gap-2.5 pt-0.5">
                                             {product.originalPrice > product.discountedPrice && (
-                                                <span className="text-[13px] font-medium text-navy/20 line-through">
+                                                <span translate="no" className="notranslate text-[13px] font-medium text-navy/20 line-through">
                                                     {currencySymbol}{product.originalPrice.toFixed(2)} {currency}
                                                 </span>
                                             )}
-                                            <span className="text-base font-black text-navy">
+                                            <span translate="no" className="notranslate text-base font-black text-navy">
                                                 From {currencySymbol}{product.discountedPrice.toFixed(2)} {currency}
                                             </span>
                                         </div>

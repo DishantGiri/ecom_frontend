@@ -75,15 +75,21 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     }, []);
 
     // Manual selection — stored separately so it's not confused with auto-detection
-    const setCurrency = (curr: string) => {
+    const setCurrency = React.useCallback((curr: string) => {
         setCurrencyState(curr);
         sessionStorage.setItem("currency_manual", curr);
-    };
+    }, []);
 
     const currencySymbol = CURRENCY_SYMBOLS[currency] || "$";
 
+    const contextValue = React.useMemo(() => ({
+        currency,
+        currencySymbol,
+        setCurrency
+    }), [currency, currencySymbol, setCurrency]);
+
     return (
-        <CurrencyContext.Provider value={{ currency, currencySymbol, setCurrency }}>
+        <CurrencyContext.Provider value={contextValue}>
             {children}
         </CurrencyContext.Provider>
     );

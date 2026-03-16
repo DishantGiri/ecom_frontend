@@ -178,10 +178,10 @@ export default function NewArrivals() {
 
                                 {/* Price */}
                                 <div className="flex items-baseline gap-2">
-                                    <span className="text-[12px] text-navy/30 line-through">
+                                    <span translate="no" className="notranslate text-[12px] text-navy/30 line-through">
                                         {currencySymbol}{(product.originalPrice || 0).toFixed(2)}
                                     </span>
-                                    <span className="text-sm font-black text-accent-red">
+                                    <span translate="no" className="notranslate text-sm font-black text-accent-red">
                                         From {currencySymbol}{(product.discountedPrice || 0).toFixed(2)} {currency}
                                     </span>
                                 </div>

@@ -199,7 +199,7 @@ const Navbar = () => {
                   setSearchQuery("");
                 }
               }}
-              className="flex items-center relative group"
+              className="notranslate flex items-center relative group"
             >
               <input
                 name="search"
@@ -224,7 +224,7 @@ const Navbar = () => {
                     setIsAccountOpen(false);
                     if (!isLanguageOpen) setLangSearch("");
                   }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-gray-50 text-navy rounded-xl font-bold text-[13px] cursor-pointer hover:bg-gray-100 transition-all group border border-gray-100 flex-shrink-0"
+                  className="notranslate flex items-center gap-1.5 px-3 py-2 bg-gray-50 text-navy rounded-xl font-bold text-[13px] cursor-pointer hover:bg-gray-100 transition-all group border border-gray-100 flex-shrink-0"
                 >
                   <img src={`https://flagcdn.com/w20/${currentLanguageFlag}.png`} alt={currentLanguageName} width={20} height={15} className="w-5 h-[15px] object-cover rounded-sm flex-shrink-0" />
                   <span translate="no" className="text-[11px] font-black uppercase tracking-wide">{language.slice(0, 2)}</span>
@@ -232,7 +232,7 @@ const Navbar = () => {
                 </div>
 
                 {isLanguageOpen && (
-                  <div onMouseLeave={() => setIsLanguageOpen(false)} className="absolute top-full right-0 mt-3 w-64 max-h-[420px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col overflow-hidden">
+                  <div onMouseLeave={() => setIsLanguageOpen(false)} className="notranslate absolute top-full right-0 mt-3 w-64 max-h-[420px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col overflow-hidden">
                     {/* Search Bar */}
                     <div className="p-3 border-b border-gray-50 bg-white sticky top-0 z-10">
                       <div className="relative group">
@@ -270,7 +270,7 @@ const Navbar = () => {
               <div className="relative flex-shrink-0">
                 <div
                   onClick={() => { setIsCurrencyOpen(!isCurrencyOpen); setIsLanguageOpen(false); setIsAccountOpen(false); }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-navy text-white rounded-xl font-bold text-[13px] cursor-pointer hover:bg-navy/90 transition-all group flex-shrink-0"
+                  className="notranslate flex items-center gap-1.5 px-3 py-2 bg-navy text-white rounded-xl font-bold text-[13px] cursor-pointer hover:bg-navy/90 transition-all group flex-shrink-0"
                 >
                   <img src={`https://flagcdn.com/w20/${CURRENCIES.find(c => c.code === currency)?.flag || 'us'}.png`} alt={currency} width={20} height={15} className="w-5 h-[15px] object-cover rounded-sm flex-shrink-0" />
                   <span translate="no" className="text-[11px] font-black whitespace-nowrap">{currency}</span>
@@ -278,7 +278,7 @@ const Navbar = () => {
                 </div>
 
                 {isCurrencyOpen && (
-                  <div onMouseLeave={() => setIsCurrencyOpen(false)} className="absolute top-full right-0 mt-3 w-72 max-h-[420px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col overflow-hidden">
+                  <div onMouseLeave={() => setIsCurrencyOpen(false)} className="notranslate absolute top-full right-0 mt-3 w-72 max-h-[420px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col overflow-hidden">
                     <div className="p-3 border-b border-gray-50 bg-white sticky top-0 z-10">
                       <p className="text-[10px] font-black text-navy/40 uppercase tracking-[0.2em] px-1">Select Currency</p>
                     </div>
@@ -311,7 +311,7 @@ const Navbar = () => {
               >
                 <button
                   onClick={() => { setIsAccountOpen(!isAccountOpen); setIsLoggedIn(isLoggedInFromCookie()); setIsCurrencyOpen(false); setIsLanguageOpen(false); }}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-navy text-white rounded-xl font-bold text-[13px] hover:bg-navy/90 transition-all flex-shrink-0"
+                  className="notranslate flex items-center gap-1.5 px-3 py-2 bg-navy text-white rounded-xl font-bold text-[13px] hover:bg-navy/90 transition-all flex-shrink-0"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                   <span className="text-[11px] font-black">{isLoggedIn ? "Account" : "Sign In"}</span>
@@ -416,7 +416,7 @@ const Navbar = () => {
               <p className="text-[10px] font-black text-navy/30 uppercase tracking-[0.2em] px-1">Shop Settings</p>
 
               {/* Language Picker */}
-              <div className="space-y-3">
+              <div className="notranslate space-y-3">
                 <label className="text-[11px] font-bold text-navy/40 uppercase tracking-widest px-1">Global Language</label>
                 <div className="relative">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy/25 pointer-events-none"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
@@ -443,7 +443,7 @@ const Navbar = () => {
               </div>
 
               {/* Currency Picker */}
-              <div className="space-y-3">
+              <div className="notranslate space-y-3">
                 <label className="text-[11px] font-bold text-navy/40 uppercase tracking-widest px-1">Shop Currency</label>
                 <div className="grid grid-cols-3 gap-2 max-h-52 overflow-y-auto custom-scrollbar">
                   {CURRENCIES.map(curr => (

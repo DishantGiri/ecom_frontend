@@ -188,7 +188,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
                 {/* Save badge */}
                 {savings > 0 && (
                     <div
-                        className="absolute top-3 left-3 z-30 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider"
+                        translate="no" className="absolute top-3 left-3 z-30 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider notranslate"
                         style={{ background: "linear-gradient(135deg, #D32F2F, #FF5252)", boxShadow: "0 4px 12px rgba(211,47,47,0.35)" }}
                     >
                         Save {currencySymbol}{savings.toFixed(2)}
@@ -642,9 +642,9 @@ export default function ProductClient() {
                             <div className="space-y-3">
                                 <div className="flex items-center gap-4">
                                     {displayOriginal > displayPrice && (
-                                        <span className="text-lg font-medium text-navy/30 line-through">{currencySymbol}{displayOriginal.toFixed(2)} {currency}</span>
+                                        <span translate="no" className="notranslate text-lg font-medium text-navy/30 line-through">{currencySymbol}{displayOriginal.toFixed(2)} {currency}</span>
                                     )}
-                                    <span className="text-2xl font-bold text-navy">{currencySymbol}{displayPrice.toFixed(2)} {currency}</span>
+                                    <span translate="no" className="notranslate text-2xl font-bold text-navy">{currencySymbol}{displayPrice.toFixed(2)} {currency}</span>
                                     {displayOriginal > displayPrice && (
                                         <span className="bg-[#3D5BC9] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                             Sale
@@ -723,7 +723,7 @@ export default function ProductClient() {
                                                             {offer.label}
                                                         </p>
                                                         {offerSavings > 0 && (
-                                                            <p className="text-[10px] font-black uppercase tracking-wider mt-1"
+                                                            <p translate="no" className="notranslate text-[10px] font-black uppercase tracking-wider mt-1"
                                                                 style={{ color: isActive ? "#86efac" : "#16a34a" }}>
                                                                 You Save {currencySymbol}{offerSavings.toFixed(2)}
                                                             </p>
@@ -733,12 +733,12 @@ export default function ProductClient() {
                                                     {/* Price block — right aligned */}
                                                     <div className="text-right flex-shrink-0">
                                                         {offer.originalPrice > 0 && (
-                                                            <p className="text-[11px] font-medium line-through leading-none mb-1"
+                                                            <p translate="no" className="notranslate text-[11px] font-medium line-through leading-none mb-1"
                                                                 style={{ color: isActive ? "rgba(255,255,255,0.35)" : "rgba(0,31,63,0.28)" }}>
                                                                 {currencySymbol}{offer.originalPrice.toFixed(2)}
                                                             </p>
                                                         )}
-                                                        <p className="text-base font-black leading-none"
+                                                        <p translate="no" className="notranslate text-base font-black leading-none"
                                                             style={{ color: isActive ? "#ffffff" : "#D32F2F" }}>
                                                             {currencySymbol}{offer.discountedPrice.toFixed(2)} {currency}
                                                         </p>
@@ -1190,11 +1190,11 @@ export default function ProductClient() {
                                                 </div>
                                                 <div className="flex items-baseline gap-2.5 pt-0.5">
                                                     {sp.originalPrice > sp.discountedPrice && (
-                                                        <span className="text-[13px] font-medium text-navy/20 line-through">
+                                                        <span translate="no" className="notranslate text-[13px] font-medium text-navy/20 line-through">
                                                             {currencySymbol}{sp.originalPrice.toFixed(2)} {currency}
                                                         </span>
                                                     )}
-                                                    <span className="text-sm lg:text-base font-black text-navy">
+                                                    <span translate="no" className="notranslate text-sm lg:text-base font-black text-navy">
                                                         From {currencySymbol}{sp.discountedPrice.toFixed(2)} {currency}
                                                     </span>
                                                 </div>
