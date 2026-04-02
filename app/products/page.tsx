@@ -257,9 +257,9 @@ function ProductsContent() {
                 )}
 
                 {/* ── FILTER BAR ── */}
-                <div className="flex items-center justify-between gap-6 mb-8 py-4 border-b border-gray-100" ref={menuRef}>
-                    <div className="flex items-center gap-10">
-                        <span className="text-[14px] font-medium text-navy">Filter:</span>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6 mb-8 py-4 border-b border-gray-100" ref={menuRef}>
+                    <div className="flex items-center gap-4 md:gap-10 w-full md:w-auto overflow-x-auto hide-scrollbar pb-2 md:pb-0">
+                        <span className="text-[14px] font-medium text-navy shrink-0">Filter:</span>
 
                         {!searchParams.get("q") && (
                             <div className="relative">
@@ -401,7 +401,7 @@ function ProductsContent() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-8 justify-between md:justify-end">
+                    <div className="flex flex-wrap items-center gap-4 md:gap-8 justify-between w-full md:w-auto mt-2 md:mt-0">
                         <div className="flex items-center gap-4">
                             <span className="text-[14px] font-medium text-navy/40">Sort by:</span>
                             <div className="relative">

@@ -47,6 +47,7 @@ const Navbar = () => {
   const pathname = usePathname();
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [navVisible, setNavVisible] = useState(true);
@@ -120,6 +121,7 @@ const Navbar = () => {
   // Close menus when route changes
   useEffect(() => {
     setIsMenuOpen(false);
+    setIsMobileSearchOpen(false);
     setIsAccountOpen(false);
     setIsLanguageOpen(false);
     setIsCurrencyOpen(false);
@@ -355,11 +357,38 @@ const Navbar = () => {
 
           {/* Mobile: Search icon — right side to balance hamburger */}
           <div className="flex lg:hidden items-center">
-            <Link href="/products" className="p-2 text-navy hover:bg-gray-50 rounded-lg transition-colors" aria-label="Search">
+            <button onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)} className="p-2 text-navy hover:bg-gray-50 rounded-lg transition-colors" aria-label="Search">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-            </Link>
+            </button>
           </div>
         </div>
+
+        {/* Mobile Search Bar Dropdown */}
+        {isMobileSearchOpen && (
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 p-4 shadow-sm z-[1001]">
+             <form onSubmit={(e) => {
+                e.preventDefault();
+                if (searchQuery.trim()) {
+                  router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+                  setIsMobileSearchOpen(false);
+                  setSearchQuery("");
+                }
+             }} className="notranslate flex items-center relative group w-full">
+                <input
+                  type="text"
+                  autoFocus
+                  name="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold text-navy focus:outline-none focus:border-accent-red focus:ring-1 focus:ring-accent-red/20 transition-all placeholder:text-navy/30"
+                />
+                <button type="submit" className="absolute right-3 text-navy/40 group-focus-within:text-accent-red transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+                </button>
+             </form>
+          </div>
+        )}
       </nav>
 
       {/* ── MOBILE SIDEBAR DRAWER ── */}
