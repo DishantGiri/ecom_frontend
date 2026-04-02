@@ -273,22 +273,26 @@ function ProductsContent() {
                                     </span>
                                 </button>
                                 {activeMenu === 'category' && (
-                                    <div className="absolute top-full left-0 mt-8 w-56 bg-white shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <div className="px-5 py-2 border-b border-gray-50 flex justify-between items-center mb-1">
-                                            <span className="text-[12px] font-medium text-navy/40">Categories</span>
+                                    <>
+                                        <div className="fixed inset-0 bg-navy/40 z-[990] sm:hidden backdrop-blur-sm transition-opacity" onClick={(e) => { e.stopPropagation(); setActiveMenu(null); }} />
+                                        <div className="fixed bottom-0 left-0 w-full sm:absolute sm:top-full sm:bottom-auto sm:w-56 bg-white shadow-[0_-12px_48px_rgba(0,0,0,0.12)] sm:shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-t-3xl sm:rounded-lg border border-gray-100 pt-3 pb-8 sm:py-3 z-[1000] sm:z-50 animate-in fade-in slide-in-from-bottom-8 sm:slide-in-from-top-2 duration-200 sm:mt-8">
+                                            <div className="sm:hidden w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-2" />
+                                            <div className="px-5 py-2 border-b border-gray-50 flex justify-between items-center mb-1">
+                                                <span className="text-[12px] font-medium text-navy/40">Categories</span>
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                                                {categories.map(cat => (
+                                                    <button
+                                                        key={cat}
+                                                        onClick={() => { setFilterCategory(cat); setActiveMenu(null); }}
+                                                        className={`w-full text-left px-5 py-3 sm:py-2.5 text-[15px] sm:text-[14px] font-medium transition-colors hover:bg-gray-50 ${filterCategory === cat ? 'text-accent-red font-black' : 'text-navy'}`}
+                                                    >
+                                                        {cat}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                        <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                                            {categories.map(cat => (
-                                                <button
-                                                    key={cat}
-                                                    onClick={() => { setFilterCategory(cat); setActiveMenu(null); }}
-                                                    className={`w-full text-left px-5 py-2.5 text-[14px] font-medium transition-colors hover:bg-gray-50 ${filterCategory === cat ? 'text-accent-red' : 'text-navy'}`}
-                                                >
-                                                    {cat}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    </>
                                 )}
                             </div>
                         )}
@@ -304,41 +308,48 @@ function ProductsContent() {
                                 </span>
                             </button>
                             {activeMenu === 'availability' && (
-                                <div className="absolute top-full left-0 mt-8 w-80 bg-white shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
-                                    <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-gray-100">
-                                        <span className="text-[15px] font-medium text-navy/70">
-                                            {[availability.inStock, availability.outOfStock].filter(Boolean).length} selected
-                                        </span>
-                                        <button onClick={resetAvailability} className="text-[15px] font-medium text-navy underline underline-offset-4 decoration-1 decoration-navy/30 hover:decoration-navy transition-all">
-                                            Reset
-                                        </button>
-                                    </div>
-                                    <div className="p-6 space-y-4">
-                                        <label className="flex items-center gap-4 cursor-pointer group">
-                                            <input
-                                                type="checkbox"
-                                                checked={availability.inStock}
-                                                onChange={(e) => setAvailability({ ...availability, inStock: e.target.checked })}
-                                                className="w-5 h-5 rounded border-gray-300 text-navy focus:ring-navy cursor-pointer"
-                                            />
-                                            <span className="text-[15px] font-medium text-navy group-hover:text-accent-red transition-colors">
-                                                In stock ({products.length})
+                                <>
+                                    <div className="fixed inset-0 bg-navy/40 z-[990] sm:hidden backdrop-blur-sm transition-opacity" onClick={(e) => { e.stopPropagation(); setActiveMenu(null); }} />
+                                    <div className="fixed bottom-0 left-0 w-full sm:absolute sm:top-full sm:bottom-auto sm:w-80 bg-white shadow-[0_-12px_48px_rgba(0,0,0,0.12)] sm:shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-t-3xl sm:rounded-lg border border-gray-100 z-[1000] sm:z-50 animate-in fade-in slide-in-from-bottom-8 sm:slide-in-from-top-2 duration-200 overflow-hidden sm:mt-8 pb-4 sm:pb-0 pt-3 sm:pt-0">
+                                        <div className="sm:hidden w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-1" />
+                                        <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-gray-100">
+                                            <span className="text-[15px] font-black sm:font-medium text-navy">
+                                                {[availability.inStock, availability.outOfStock].filter(Boolean).length} selected
                                             </span>
-                                        </label>
-                                        <label className="flex items-center gap-4 cursor-not-allowed group opacity-40">
-                                            <input
-                                                type="checkbox"
-                                                disabled
-                                                checked={availability.outOfStock}
-                                                onChange={(e) => setAvailability({ ...availability, outOfStock: e.target.checked })}
-                                                className="w-5 h-5 rounded border-gray-200 text-navy cursor-not-allowed"
-                                            />
-                                            <span className="text-[15px] font-medium text-navy">
-                                                Out of stock (0)
-                                            </span>
-                                        </label>
+                                            <button onClick={resetAvailability} className="text-[15px] font-medium text-navy underline underline-offset-4 decoration-1 decoration-navy/30 hover:decoration-navy transition-all">
+                                                Reset
+                                            </button>
+                                        </div>
+                                        <div className="p-6 space-y-5 sm:space-y-4 max-h-[50vh] overflow-y-auto">
+                                            <label className="flex items-center gap-4 cursor-pointer group">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={availability.inStock}
+                                                    onChange={(e) => setAvailability({ ...availability, inStock: e.target.checked })}
+                                                    className="w-6 h-6 sm:w-5 sm:h-5 rounded-md sm:rounded border-gray-300 text-navy focus:ring-navy cursor-pointer"
+                                                />
+                                                <span className="text-[16px] sm:text-[15px] font-medium text-navy group-hover:text-accent-red transition-colors">
+                                                    In stock ({products.length})
+                                                </span>
+                                            </label>
+                                            <label className="flex items-center gap-4 cursor-not-allowed group opacity-40">
+                                                <input
+                                                    type="checkbox"
+                                                    disabled
+                                                    checked={availability.outOfStock}
+                                                    onChange={(e) => setAvailability({ ...availability, outOfStock: e.target.checked })}
+                                                    className="w-6 h-6 sm:w-5 sm:h-5 rounded-md sm:rounded border-gray-200 text-navy cursor-not-allowed"
+                                                />
+                                                <span className="text-[16px] sm:text-[15px] font-medium text-navy">
+                                                    Out of stock (0)
+                                                </span>
+                                            </label>
+                                        </div>
+                                        <div className="sm:hidden p-4 border-t border-gray-100">
+                                            <button onClick={() => setActiveMenu(null)} className="w-full py-3.5 bg-navy text-white font-black text-[13px] rounded-xl hover:bg-navy/90 transition-colors uppercase tracking-[0.15em]">Apply Filters</button>
+                                        </div>
                                     </div>
-                                </div>
+                                </>
                             )}
                         </div>
 
@@ -353,50 +364,57 @@ function ProductsContent() {
                                 </span>
                             </button>
                             {activeMenu === 'price' && (
-                                <div className="absolute top-full left-0 mt-8 w-96 bg-white shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
-                                    <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-gray-100">
-                                        <span translate="no" className="notranslate text-[15px] font-medium text-navy/70">
-                                            The highest price is {currencySymbol}{maxProductPrice.toFixed(2)}
-                                        </span>
-                                        <button onClick={resetPrice} className="text-[15px] font-medium text-navy underline underline-offset-4 decoration-1 decoration-navy/30 hover:decoration-navy transition-all">
-                                            Reset
-                                        </button>
-                                    </div>
-                                    <div className="p-6">
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative flex-1">
-                                                <span translate="no" className="notranslate absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    placeholder="From"
-                                                    value={priceRange.from}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        if (parseFloat(val) < 0) return;
-                                                        setPriceRange({ ...priceRange, from: val });
-                                                    }}
-                                                    className={`w-full pl-8 pr-4 py-3 bg-white border rounded focus:ring-0 text-[15px] placeholder:text-navy/40 transition-colors ${priceRange.from && priceRange.to && parseFloat(priceRange.from) > parseFloat(priceRange.to) ? 'border-accent-red' : 'border-gray-300 focus:border-navy'}`}
-                                                />
-                                            </div>
-                                            <div className="relative flex-1">
-                                                <span translate="no" className="notranslate absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[15px]">{currencySymbol}</span>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    placeholder="To"
-                                                    value={priceRange.to}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        if (parseFloat(val) < 0) return;
-                                                        setPriceRange({ ...priceRange, to: val });
-                                                    }}
-                                                    className={`w-full pl-8 pr-4 py-3 bg-white border rounded focus:ring-0 text-[15px] placeholder:text-navy/40 transition-colors ${priceRange.from && priceRange.to && parseFloat(priceRange.from) > parseFloat(priceRange.to) ? 'border-accent-red' : 'border-gray-300 focus:border-navy'}`}
-                                                />
+                                <>
+                                    <div className="fixed inset-0 bg-navy/40 z-[990] sm:hidden backdrop-blur-sm transition-opacity" onClick={(e) => { e.stopPropagation(); setActiveMenu(null); }} />
+                                    <div className="fixed bottom-0 left-0 w-full sm:absolute sm:top-full sm:bottom-auto sm:w-96 bg-white shadow-[0_-12px_48px_rgba(0,0,0,0.12)] sm:shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-t-3xl sm:rounded-lg border border-gray-100 z-[1000] sm:z-50 animate-in fade-in slide-in-from-bottom-8 sm:slide-in-from-top-2 duration-200 overflow-hidden sm:mt-8 pb-4 sm:pb-0 pt-3 sm:pt-0">
+                                        <div className="sm:hidden w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-1" />
+                                        <div className="px-6 py-4 flex justify-between items-center bg-white border-b border-gray-100">
+                                            <span translate="no" className="notranslate text-[14px] sm:text-[15px] font-black sm:font-medium text-navy">
+                                                Max price is {currencySymbol}{maxProductPrice.toFixed(2)}
+                                            </span>
+                                            <button onClick={resetPrice} className="text-[15px] font-medium text-navy underline underline-offset-4 decoration-1 decoration-navy/30 hover:decoration-navy transition-all">
+                                                Reset
+                                            </button>
+                                        </div>
+                                        <div className="p-6">
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative flex-1">
+                                                    <span translate="no" className="notranslate absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[16px] sm:text-[15px]">{currencySymbol}</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        placeholder="From"
+                                                        value={priceRange.from}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (parseFloat(val) < 0) return;
+                                                            setPriceRange({ ...priceRange, from: val });
+                                                        }}
+                                                        className={`w-full pl-9 pr-4 py-4 sm:py-3 bg-white border rounded-xl sm:rounded focus:ring-0 text-[16px] sm:text-[15px] placeholder:text-navy/40 transition-colors ${priceRange.from && priceRange.to && parseFloat(priceRange.from) > parseFloat(priceRange.to) ? 'border-accent-red' : 'border-gray-300 focus:border-navy'}`}
+                                                    />
+                                                </div>
+                                                <div className="relative flex-1">
+                                                    <span translate="no" className="notranslate absolute left-4 top-1/2 -translate-y-1/2 text-navy/40 text-[16px] sm:text-[15px]">{currencySymbol}</span>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        placeholder="To"
+                                                        value={priceRange.to}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (parseFloat(val) < 0) return;
+                                                            setPriceRange({ ...priceRange, to: val });
+                                                        }}
+                                                        className={`w-full pl-9 pr-4 py-4 sm:py-3 bg-white border rounded-xl sm:rounded focus:ring-0 text-[16px] sm:text-[15px] placeholder:text-navy/40 transition-colors ${priceRange.from && priceRange.to && parseFloat(priceRange.from) > parseFloat(priceRange.to) ? 'border-accent-red' : 'border-gray-300 focus:border-navy'}`}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
+                                        <div className="sm:hidden p-4 border-t border-gray-100">
+                                            <button onClick={() => setActiveMenu(null)} className="w-full py-3.5 bg-navy text-white font-black text-[13px] rounded-xl hover:bg-navy/90 transition-colors uppercase tracking-[0.15em]">Apply Price</button>
+                                        </div>
                                     </div>
-                                </div>
+                                </>
                             )}
                         </div>
                     </div>
@@ -415,23 +433,27 @@ function ProductsContent() {
                                     </span>
                                 </button>
                                 {activeMenu === 'sort' && (
-                                    <div className="absolute top-full right-0 mt-8 w-56 bg-white shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-lg border border-gray-100 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        {[
-                                            ['Relevance', 'relevance'],
-                                            ['Best selling', 'best-selling'],
-                                            ['Newest', 'newest'],
-                                            ['Price: Low to High', 'price-low'],
-                                            ['Price: High to Low', 'price-high']
-                                        ].map(([label, val]) => (
-                                            <button
-                                                key={val}
-                                                onClick={() => { setSortBy(val); setActiveMenu(null); }}
-                                                className={`w-full text-left px-5 py-2.5 text-[14px] font-medium transition-colors hover:bg-gray-50 ${sortBy === val ? 'text-navy font-bold' : 'text-navy opacity-70'}`}
-                                            >
-                                                {label}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <>
+                                        <div className="fixed inset-0 bg-navy/40 z-[990] sm:hidden backdrop-blur-sm transition-opacity" onClick={(e) => { e.stopPropagation(); setActiveMenu(null); }} />
+                                        <div className="fixed bottom-0 left-0 w-full sm:absolute sm:top-full sm:bottom-auto sm:left-auto sm:right-0 sm:w-56 bg-white shadow-[0_-12px_48px_rgba(0,0,0,0.12)] sm:shadow-[0_12px_48px_rgba(0,0,0,0.12)] rounded-t-3xl sm:rounded-lg border border-gray-100 pt-3 pb-8 sm:py-3 z-[1000] sm:z-50 animate-in fade-in slide-in-from-bottom-8 sm:slide-in-from-top-2 duration-200 sm:mt-8">
+                                            <div className="sm:hidden w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-2" />
+                                            {[
+                                                ['Relevance', 'relevance'],
+                                                ['Best selling', 'best-selling'],
+                                                ['Newest', 'newest'],
+                                                ['Price: Low to High', 'price-low'],
+                                                ['Price: High to Low', 'price-high']
+                                            ].map(([label, val]) => (
+                                                <button
+                                                    key={val}
+                                                    onClick={() => { setSortBy(val); setActiveMenu(null); }}
+                                                    className={`w-full text-left px-6 sm:px-5 py-4 sm:py-2.5 text-[16px] sm:text-[14px] font-medium transition-colors hover:bg-gray-50 ${sortBy === val ? 'text-navy font-black sm:font-bold' : 'text-navy opacity-70'}`}
+                                                >
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </div>
