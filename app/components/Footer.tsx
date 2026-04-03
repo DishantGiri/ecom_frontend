@@ -55,7 +55,7 @@ export default function Footer() {
                         <ul className="space-y-5">
                             {["Privacy Policy", "Terms of Service", "Shipping Policy", "Return Policy"].map((item) => (
                                 <li key={item}>
-                                    <Link href="#" className="text-white/60 hover:text-white transition-colors text-sm font-bold tracking-tight">
+                                    <Link href={`/${item.toLowerCase().replace(/ /g, '-')}`} className="text-white/60 hover:text-white transition-colors text-sm font-bold tracking-tight">
                                         {item}
                                     </Link>
                                 </li>
@@ -68,8 +68,8 @@ export default function Footer() {
                     <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
                         <p>© {currentYear} LOREM INDUSTRIES. ALL RIGHTS RESERVED.</p>
                         <div className="flex items-center gap-10">
-                            <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
-                            <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+                            <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                            <Link href="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link>
                         </div>
                     </div>
                     <div className="opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
