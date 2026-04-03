@@ -7,6 +7,7 @@ const BestSellers = dynamic(() => import("./components/BestSellers"));
 const NewArrivals = dynamic(() => import("./components/NewArrivals"));
 const ShopByCategory = dynamic(() => import("./components/ShopByCategory"));
 const FAQ = dynamic(() => import("./components/FAQ"));
+const Subscribe = dynamic(() => import("./components/Subscribe"));
 
 export default function Home() {
   return (
@@ -23,6 +24,9 @@ export default function Home() {
       </ScrollReveal>
       <ScrollReveal animation="fade" delay={300}>
         <FAQ />
+      </ScrollReveal>
+      <ScrollReveal animation="up" delay={400}>
+        <Subscribe />
       </ScrollReveal>
     </main>
   );
