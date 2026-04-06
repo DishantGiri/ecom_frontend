@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiFetch } from "../utils/apiFetch";
@@ -19,6 +18,17 @@ const CATEGORY_IMAGES: Record<string, string> = {
     "Digestive Health": "/digestive-health.jpg",
     "Default": "/default-category.jpg" // Fallback image setup
 };
+
+function getImageUrl(url: string): string {
+    if (!url) return CATEGORY_IMAGES["Default"];
+    // Already a full URL — fix any accidental double slashes after protocol
+    if (url.startsWith("http")) {
+        const [proto, rest] = url.split("://");
+        return proto + "://" + rest.replace(/\/\/+/g, "/");
+    }
+    // Relative path — prefix apiHost
+    return `${apiHost}${url.startsWith("/") ? "" : "/"}${url}`;
+}
 
 export default function ShopByCategory() {
     const [categories, setCategories] = useState<CategoryInfo[]>([]);
@@ -94,12 +104,11 @@ export default function ShopByCategory() {
                                 className="group block relative w-full aspect-square rounded-2xl overflow-hidden cursor-pointer"
                             >
                                 {/* Background Image */}
-                                <Image
-                                    src={cat.imageUrl || CATEGORY_IMAGES[cat.category_name] || CATEGORY_IMAGES["Default"]}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={getImageUrl(cat.imageUrl || CATEGORY_IMAGES[cat.category_name] || CATEGORY_IMAGES["Default"])}
                                     alt={cat.category_name || "Category"}
-                                    fill
-                                    sizes="(max-width: 768px) 100vw, 25vw"
-                                    className="object-cover transition-transform duration-700 group-hover:scale-110 bg-gray-200"
+                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
 
                                 {/* Dark Gradient Overlay */}

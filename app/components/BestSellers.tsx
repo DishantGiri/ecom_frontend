@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import Image from "next/image";
+
 import Link from "next/link";
 import { useCurrency } from "./CurrencyProvider";
 import { trackProductClick } from "../utils/tracking";
@@ -127,7 +127,7 @@ export default function BestSellers() {
                     {(products.length > 0 ? products : Array(4).fill({})).map((product, idx) => (
                         <Link
                             key={product.id || idx}
-                            href={product.id ? `/products/${product.id}` : '#'}
+                            href={product.slug ? `/products/${product.slug}` : '#' }
                             className="flex-shrink-0 w-[calc(25%-18px)] min-w-[240px] group cursor-pointer block"
                             style={{ scrollSnapAlign: "start" }}
                             onClick={() => product.id && trackProductClick(product.id)}
@@ -145,12 +145,10 @@ export default function BestSellers() {
                                 {/* Front image — fills area, no shadow */}
                                 <div className="absolute inset-0 z-10 flex items-center justify-center">
                                     <div className="relative w-full h-full">
-                                        <Image
+                                        <img
                                             src={getImageUrl(product.featureImageUrl)}
                                             alt={product.title || "Loading..."}
-                                            fill
-                                            sizes="(max-width: 768px) 50vw, 25vw"
-                                            className="object-contain group-hover:scale-105 transition-transform duration-500"
+                                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                                         />
                                     </div>
                                 </div>

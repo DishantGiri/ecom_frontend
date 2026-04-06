@@ -10,6 +10,7 @@ import { apiHost } from "../../utils/apiHost";
 interface Product {
     id: number;
     title: string;
+    slug: string;
 }
 
 interface Review {
@@ -95,7 +96,7 @@ export default function ReviewsPage() {
 
             // Fetch product details in parallel for efficiency
             const detailPromises = productList.map(p =>
-                fetch(`${apiHost}/api/products/${p.id}`).then(res => res.ok ? res.json() : null)
+                fetch(`${apiHost}/api/products/${p.slug}`).then(res => res.ok ? res.json() : null)
             );
 
             const fullProducts = await Promise.all(detailPromises);

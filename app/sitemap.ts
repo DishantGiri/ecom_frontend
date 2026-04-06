@@ -8,7 +8,7 @@ const siteUrl = (
     process.env.NEXT_PUBLIC_SITE_URL || "http://209.126.86.149:3083"
 ).replace(/\/+$/, "");
 
-async function getProducts(): Promise<{ id: number; updatedAt?: string }[]> {
+async function getProducts(): Promise<{ id: number; slug: string; updatedAt?: string }[]> {
     try {
         const res = await fetch(`${apiHost}/api/products`, { next: { revalidate: 3600 } });
         if (!res.ok) return [];
@@ -77,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Dynamic product pages
     const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
-        url: `${siteUrl}/products/${product.id}`,
+        url: `${siteUrl}/products/${product.slug}`,
         lastModified: product.updatedAt ? new Date(product.updatedAt) : new Date(),
         changeFrequency: "weekly" as const,
         priority: 0.8,

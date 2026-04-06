@@ -4,6 +4,7 @@ import ProductClient from "./ProductClient";
 interface Product {
     id: number;
     title: string;
+    slug: string;
     numberOfReviews: number;
     starRating: number;
     discountedPrice: number;
@@ -20,13 +21,13 @@ function getImageUrl(url: string): string {
 export default async function ProductPage({
     params,
 }: {
-    params: Promise<{ id: string }>;
+    params: Promise<{ slug: string }>;
 }) {
-    const { id } = await params;
+    const { slug } = await params;
 
     let product: Product | null = null;
     try {
-        const res = await fetch(`${apiHost}/api/products/${id}?currency=USD`, {
+        const res = await fetch(`${apiHost}/api/products/${slug}?currency=USD`, {
             next: { revalidate: 60 },
         });
         if (res.ok) product = await res.json();
@@ -54,7 +55,7 @@ export default async function ProductPage({
             }),
             offers: {
                 "@type": "Offer",
-                url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://209.126.86.149:3083"}/products/${id}`,
+                url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://209.126.86.149:3083"}/products/${slug}`,
                 priceCurrency: "USD",
                 price: product.discountedPrice,
                 priceValidUntil: new Date(

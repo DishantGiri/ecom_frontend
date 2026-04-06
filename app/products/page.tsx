@@ -199,7 +199,7 @@ function ProductsContent() {
                             "itemListElement": filteredProducts.slice(0, 20).map((p, i) => ({
                                 "@type": "ListItem",
                                 "position": i + 1,
-                                "url": `${typeof window !== "undefined" ? window.location.origin : ""}/products/${p.id}`,
+                                "url": `${typeof window !== "undefined" ? window.location.origin : ""}/products/${p.slug}`,
                                 "name": p.title
                             }))
                         }
@@ -477,7 +477,7 @@ function ProductsContent() {
                     ) : (
                         filteredProducts.map((product) => (
                             <Link
-                                href={`/products/${product.id}`}
+                                href={`/products/${product.slug}`}
                                 key={product.id}
                                 className="group block"
                             >
@@ -567,7 +567,7 @@ function ProductsContent() {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
                             {recommendations.map((product) => (
                                 <Link
-                                    href={`/products/${product.id}`}
+                                    href={`/products/${product.slug}`}
                                     key={`rec-${product.id}`}
                                     className="group block"
                                 >

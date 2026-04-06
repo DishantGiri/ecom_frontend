@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { getTokenFromCookie, isAdminFromCookie, clearAuthCookies } from "../utils/auth";
 import { apiHost } from "../utils/apiHost";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
+
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
 interface Review {
     id: number;
@@ -29,6 +33,7 @@ interface Offer {
 interface Product {
     id: number;
     title: string;
+    slug?: string;
     ribbon?: string;
     numberOfReviews: number;
     starRating: number;
@@ -66,6 +71,7 @@ export default function ProductsPage() {
     // Form State
     const [formData, setFormData] = useState({
         title: "",
+        slug: "",
         ribbon: "",
         numberOfReviews: 0,
         starRating: 5.0,
@@ -412,7 +418,7 @@ export default function ProductsPage() {
                 toast.success("Review added successfully!", { id: loadingToast });
                 setReviewForm({ reviewerName: "", reviewText: "", starRating: 5.0, image: null });
                 // Re-fetch product data to update UI
-                const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.id}`);
+                const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.slug}`);
                 if (refreshed.ok) {
                     const data = await refreshed.json();
                     setEditingProduct(data);
@@ -440,8 +446,8 @@ export default function ProductsPage() {
 
             if (response.ok) {
                 toast.success("Review deleted", { id: loadingToast });
-                if (editingProduct) {
-                    const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.id}`);
+                if (editingProduct && editingProduct.slug) {
+                    const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.slug}`);
                     if (refreshed.ok) {
                         const data = await refreshed.json();
                         setEditingProduct(data);
@@ -459,6 +465,7 @@ export default function ProductsPage() {
     const resetForm = () => {
         setFormData({
             title: "",
+            slug: "",
             ribbon: "",
             numberOfReviews: 0,
             starRating: 5.0,
@@ -493,6 +500,7 @@ export default function ProductsPage() {
 
         setFormData({
             title: product.title,
+            slug: product.slug || "",
             ribbon: product.ribbon || "",
             numberOfReviews: product.numberOfReviews,
             starRating: product.starRating,
@@ -731,6 +739,16 @@ export default function ProductsPage() {
                                             />
                                         </div>
                                         <div className="space-y-4">
+                                            <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">URL Slug</label>
+                                            <input
+                                                type="text" required
+                                                value={formData.slug}
+                                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl p-5 text-base font-bold focus:ring-2 focus:ring-accent-red transition-all"
+                                                placeholder="e.g. nerve-freedom-pro"
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
                                             <label className="block text-[10px] font-black text-navy uppercase tracking-widest ml-1">Ribbon / Badge (Optional)</label>
                                             <input
                                                 type="text"
@@ -865,8 +883,12 @@ export default function ProductsPage() {
 
                                                 const insertTag = (prefix: string, suffix: string) => {
                                                     const el = document.getElementById(`textarea-${sectionKey}`) as HTMLTextAreaElement | null;
-                                                    if (!el) return;
                                                     const currentVal = (formData as any)[sectionKey] || "";
+                                                    if (!el) {
+                                                        // ReactQuill field — just append content to state
+                                                        setFormData({ ...formData, [sectionKey]: currentVal + prefix + suffix });
+                                                        return;
+                                                    }
                                                     const start = el.selectionStart;
                                                     const end = el.selectionEnd;
                                                     const before = currentVal.substring(0, start);
@@ -964,16 +986,27 @@ export default function ProductsPage() {
                                                             </div>
                                                         </div>
 
-                                                        <textarea
-                                                            id={`textarea-${sectionKey}`}
-                                                            value={(formData as any)[sectionKey] || ""}
-                                                            onChange={(e) => setFormData({ ...formData, [sectionKey]: e.target.value })}
-                                                            rows={sectionKey === 'description' || sectionKey === 'highlights' ? 10 : 6}
-                                                            className="w-full bg-white border-0 rounded-2xl p-5 text-base font-medium focus:ring-2 focus:ring-navy/20 transition-all shadow-sm resize-y leading-[1.7]"
-                                                            placeholder={section.placeholder}
-                                                            onDragStart={(e) => e.stopPropagation()}
-                                                            draggable={false}
-                                                        />
+                                                        {(sectionKey === 'description' || sectionKey === 'highlights' || sectionKey === 'directions' || sectionKey === 'benefits' || sectionKey === 'guarantee' || sectionKey === 'shippingInfo') ? (
+                                                            <div className="bg-white rounded-xl overflow-hidden [&_.ql-container]:text-base [&_.ql-container]:font-medium [&_.ql-editor]:min-h-[200px]">
+                                                                <ReactQuill
+                                                                    theme="snow"
+                                                                    value={(formData as any)[sectionKey] || ""}
+                                                                    onChange={(val) => setFormData({ ...formData, [sectionKey]: val })}
+                                                                    placeholder={section.placeholder}
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <textarea
+                                                                id={`textarea-${sectionKey}`}
+                                                                value={(formData as any)[sectionKey] || ""}
+                                                                onChange={(e) => setFormData({ ...formData, [sectionKey]: e.target.value })}
+                                                                rows={6}
+                                                                className="w-full bg-white border-0 rounded-2xl p-5 text-base font-medium focus:ring-2 focus:ring-navy/20 transition-all shadow-sm resize-y leading-[1.7]"
+                                                                placeholder={section.placeholder}
+                                                                onDragStart={(e) => e.stopPropagation()}
+                                                                draggable={false}
+                                                            />
+                                                        )}
                                                     </div>
                                                 );
                                             })}

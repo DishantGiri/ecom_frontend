@@ -17,6 +17,7 @@ export default function SettingsPage() {
     // Admin Account States
     const [emailData, setEmailData] = useState({ newEmail: "", password: "" });
     const [passwordData, setPasswordData] = useState({ currentPassword: "", newPassword: "" });
+    const [showPasswords, setShowPasswords] = useState({ emailPwd: false, currentPwd: false, newPwd: false });
 
     // Snippets States
     const [snippets, setSnippets] = useState<{ id: number; name: string; content: string }[]>([]);
@@ -624,13 +625,18 @@ export default function SettingsPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Confirm Identity (Password)</label>
-                                    <input
-                                        type="password" required
-                                        value={emailData.password}
-                                        onChange={(e) => setEmailData({ ...emailData, password: e.target.value })}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text"
-                                        placeholder="••••••••"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showPasswords.emailPwd ? "text" : "password"} required
+                                            value={emailData.password}
+                                            onChange={(e) => setEmailData({ ...emailData, password: e.target.value })}
+                                            className="w-full px-5 py-4 pr-12 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text font-mono"
+                                            placeholder="••••••••"
+                                        />
+                                        <button type="button" tabIndex={-1} onClick={() => setShowPasswords(s => ({ ...s, emailPwd: !s.emailPwd }))} className="absolute right-4 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy transition-colors">
+                                            {showPasswords.emailPwd ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     type="submit"
@@ -654,23 +660,33 @@ export default function SettingsPage() {
                             <form onSubmit={handleChangePassword} className="space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">Current Password</label>
-                                    <input
-                                        type="password" required
-                                        value={passwordData.currentPassword}
-                                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text"
-                                        placeholder="••••••••"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showPasswords.currentPwd ? "text" : "password"} required
+                                            value={passwordData.currentPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                            className="w-full px-5 py-4 pr-12 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text font-mono"
+                                            placeholder="••••••••"
+                                        />
+                                        <button type="button" tabIndex={-1} onClick={() => setShowPasswords(s => ({ ...s, currentPwd: !s.currentPwd }))} className="absolute right-4 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy transition-colors">
+                                            {showPasswords.currentPwd ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-navy uppercase tracking-[0.2em] pl-1">New Secure Password</label>
-                                    <input
-                                        type="password" required
-                                        value={passwordData.newPassword}
-                                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text"
-                                        placeholder="Min 8 characters"
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            type={showPasswords.newPwd ? "text" : "password"} required
+                                            value={passwordData.newPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                            className="w-full px-5 py-4 pr-12 bg-gray-50 border border-gray-100 rounded-none text-sm font-bold text-navy focus:outline-none focus:border-accent-red cursor-text font-mono"
+                                            placeholder="Min 8 characters"
+                                        />
+                                        <button type="button" tabIndex={-1} onClick={() => setShowPasswords(s => ({ ...s, newPwd: !s.newPwd }))} className="absolute right-4 top-1/2 -translate-y-1/2 text-navy/30 hover:text-navy transition-colors">
+                                            {showPasswords.newPwd ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                                        </button>
+                                    </div>
                                 </div>
                                 <button
                                     type="submit"
