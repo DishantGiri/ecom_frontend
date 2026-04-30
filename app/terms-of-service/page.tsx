@@ -1,54 +1,83 @@
-import React from "react";
+import ScrollReveal from "../components/ScrollReveal";
+
+const LegalSection = ({ title, content }: { title: string, content: React.ReactNode }) => (
+    <div className="mb-12">
+        <h2 className="text-xs font-black text-navy uppercase tracking-widest mb-4">{title}</h2>
+        <div className="text-navy/60 text-sm leading-relaxed space-y-4">
+            {content}
+        </div>
+    </div>
+);
 
 export default function TermsOfService() {
     return (
-        <main className="min-h-screen bg-white font-sans pt-32 pb-24">
-            <div className="max-w-4xl mx-auto px-6 md:px-12">
-                <div className="mb-16">
-                    <span className="text-accent-red text-sm font-black uppercase tracking-[0.2em] mb-4 block">Legal</span>
-                    <h1 className="text-4xl md:text-5xl font-black text-navy tracking-tight mb-6">
-                        Terms of Service
-                    </h1>
-                    <p className="text-navy/50 font-medium text-lg">
-                        Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
+        <main className="min-h-screen bg-white">
+            {/* Header Image Area without excessive top padding */}
+            <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-end pb-12 border-b border-gray-100">
+                <div className="absolute inset-x-0 top-0 h-full">
+                    <img 
+                        src="/legal.png" 
+                        alt="Legal Data Protocol"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent" />
                 </div>
-
-                <div className="prose prose-lg text-navy/70 space-y-8">
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">1. Agreement to Terms</h2>
-                        <p>
-                            By viewing or navigating through our website, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must not use our website.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">2. User Accounts</h2>
-                        <p>
-                            When you create an account with us, you must provide us with information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.
-                        </p>
-                        <ul className="list-disc pl-6 space-y-2 mt-4">
-                            <li>You are responsible for safeguarding the password that you use to access the Service.</li>
-                            <li>You agree not to disclose your password to any third party.</li>
-                            <li>You must notify us immediately upon becoming aware of any breach of security or unauthorized use of your account.</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">3. Acceptable Use</h2>
-                        <p>
-                            You agree not to use the website in any way that causes, or may cause, damage to the website or impairment of the availability or accessibility of the website. You must not use the website in any manner that is unlawful, illegal, fraudulent, or harmful.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">4. Limitations of Liability</h2>
-                        <p>
-                            In no event shall we, nor our directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
-                        </p>
-                    </section>
+                <div className="relative z-10 max-w-3xl mx-auto px-6 md:px-12 w-full">
+                    <ScrollReveal animation="up">
+                        <p className="text-accent-red font-black uppercase tracking-[0.4em] text-[10px] mb-2">Agreement Foundation</p>
+                        <h1 className="text-4xl lg:text-5xl font-black text-navy tracking-tight">Terms of Service</h1>
+                    </ScrollReveal>
                 </div>
-            </div>
+            </section>
+
+            <section className="py-16 px-6 md:px-12">
+                <div className="max-w-3xl mx-auto">
+                    <ScrollReveal animation="up">
+                        <p className="text-[10px] font-bold text-navy/30 uppercase tracking-[0.2em] mb-12 pb-6 border-b border-gray-50">
+                            HealthcareDrugstore.com Protocol Revision: April 28, 2026
+                        </p>
+
+                        <LegalSection 
+                            title="1. Agreement Foundation" 
+                            content={
+                                <p>By engaging with our platform, you acknowledge and accept our clinical distribution protocols and interface regulations.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="2. Clinical Disclaimer" 
+                            content={
+                                <p>Information on this site is for educational synthesis. Always consult a certified medical professional before implementing healthcare changes.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="3. User Conduct & Security" 
+                            content={
+                                <p>Users must verify they are of legal age (18+). You are responsible for the integrity of your session credentials and pharmaceutical orders.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="4. Property Rights" 
+                            content={
+                                <p>All brand identities, interface designs, and clinical data structures are the exclusive property of HealthcareDrugstore.com.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="5. Policy Modifications" 
+                            content={
+                                <p>We reserve the right to refine these terms at any interval to align with healthcare regulations and pharmaceutical market shifts.</p>
+                            } 
+                        />
+
+                        <div className="mt-20 pt-10 border-t border-gray-50 text-[11px] font-bold text-navy/40 uppercase tracking-widest text-center">
+                            Inquiries: legal@healthcaredrugstore.com
+                        </div>
+                    </ScrollReveal>
+                </div>
+            </section>
         </main>
     );
 }

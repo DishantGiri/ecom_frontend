@@ -1,54 +1,76 @@
-import React from "react";
+import ScrollReveal from "../components/ScrollReveal";
+
+const LegalSection = ({ title, content }: { title: string, content: React.ReactNode }) => (
+    <div className="mb-12">
+        <h2 className="text-xs font-black text-navy uppercase tracking-widest mb-4">{title}</h2>
+        <div className="text-navy/60 text-sm leading-relaxed space-y-4">
+            {content}
+        </div>
+    </div>
+);
 
 export default function ReturnPolicy() {
     return (
-        <main className="min-h-screen bg-white font-sans pt-32 pb-24">
-            <div className="max-w-4xl mx-auto px-6 md:px-12">
-                <div className="mb-16">
-                    <span className="text-accent-red text-sm font-black uppercase tracking-[0.2em] mb-4 block">Legal</span>
-                    <h1 className="text-4xl md:text-5xl font-black text-navy tracking-tight mb-6">
-                        Return Policy
-                    </h1>
-                    <p className="text-navy/50 font-medium text-lg">
-                        Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
+        <main className="min-h-screen bg-white">
+            {/* Header Image Area without excessive top padding */}
+            <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-end pb-12 border-b border-gray-100">
+                <div className="absolute inset-x-0 top-0 h-full">
+                    <img 
+                        src="/legal.png" 
+                        alt="Quality Guarantee"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent" />
                 </div>
-
-                <div className="prose prose-lg text-navy/70 space-y-8">
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">1. Returns</h2>
-                        <p>
-                            We have a 30-day return policy, which means you have 30 days after receiving your item to request a return. To be eligible for a return, your item must be in the same condition that you received it, unworn or unused, with tags, and in its original packaging. You will also need the receipt or proof of purchase.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">2. Refunds</h2>
-                        <p>
-                            We will notify you once we have received and inspected your return, and let you know if the refund was approved or not. If approved, you will be automatically refunded on your original payment method within 10 business days.
-                        </p>
-                        <ul className="list-disc pl-6 space-y-2 mt-4">
-                            <li>Please remember it can take some time for your bank or credit card company to process and post the refund too.</li>
-                            <li>If more than 15 business days have passed since we approved your return, please contact us.</li>
-                            <li>Original shipping costs are non-refundable.</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">3. Exchanges</h2>
-                        <p>
-                            The fastest way to ensure you get what you want is to return the item you have, and once the return is accepted, make a separate purchase for the new item. We do not offer direct exchanges at this moment.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">4. Shipping Returns</h2>
-                        <p>
-                            To return your product, you should mail your product to our designated return address. You will be responsible for paying for your own shipping costs for returning your item. Shipping costs are non-refundable. If you receive a refund, the cost of return shipping will be deducted from your refund.
-                        </p>
-                    </section>
+                <div className="relative z-10 max-w-3xl mx-auto px-6 md:px-12 w-full">
+                    <ScrollReveal animation="up">
+                        <p className="text-accent-red font-black uppercase tracking-[0.4em] text-[10px] mb-2">Quality Guarantee</p>
+                        <h1 className="text-4xl lg:text-5xl font-black text-navy tracking-tight">Return Policy</h1>
+                    </ScrollReveal>
                 </div>
-            </div>
+            </section>
+
+            <section className="py-16 px-6 md:px-12">
+                <div className="max-w-3xl mx-auto">
+                    <ScrollReveal animation="up">
+                        <p className="text-[10px] font-bold text-navy/30 uppercase tracking-[0.2em] mb-12 pb-6 border-b border-gray-50">
+                            HealthcareDrugstore.com Medical Protocols
+                        </p>
+
+                        <LegalSection 
+                            title="1. Return Eligibility" 
+                            content={
+                                <p>Pharmaceutical returns are permitted only if the clinical seal is intact and packaging is in original laboratory condition.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="2. Request Window" 
+                            content={
+                                <p>You have 30 days from the timestamp of delivery to initiate a return protocol via our support center.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="3. Inspection & Reimbursement" 
+                            content={
+                                <p>Refunds are processed following successful inspection by our quality control unit. Approved credits are issued within 3-5 business cycles.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="4. Non-Refundable Stock" 
+                            content={
+                                <p>For health and safety compliance, opened medications or sterile equipment cannot be accepted for return once the barrier seal is compromised.</p>
+                            } 
+                        />
+
+                        <div className="mt-20 pt-10 border-t border-gray-50 text-[11px] font-bold text-navy/40 uppercase tracking-widest text-center">
+                            Initiate Return: returns@healthcaredrugstore.com
+                        </div>
+                    </ScrollReveal>
+                </div>
+            </section>
         </main>
     );
 }

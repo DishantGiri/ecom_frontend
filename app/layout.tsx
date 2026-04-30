@@ -8,8 +8,8 @@ import ToasterProvider from "./components/ToasterProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 export const metadata: Metadata = {
-  title: "Lorem | Premium Supplements",
-  description: "High quality health products for better performance.",
+  title: "HealthcareDrugstore.com | Premium Pharmaceutical Access",
+  description: "Elite medical solutions and high-quality health products for optimal performance and wellness.",
 };
 
 export default function RootLayout({
@@ -34,9 +34,9 @@ export default function RootLayout({
                 __html: JSON.stringify({
                   "@context": "https://schema.org",
                   "@type": "Organization",
-                  "name": "Lorem",
-                  "url": "http://209.126.86.149:3083",
-                  "logo": "http://209.126.86.149:3083/logo.png",
+                  "name": "HealthcareDrugstore",
+                  "url": "https://healthcaredrugstore.com",
+                  "logo": "https://healthcaredrugstore.com/logo.png",
                   "description": "Premium health and wellness supplements for optimal performance.",
                   "address": {
                     "@type": "PostalAddress",
@@ -45,7 +45,7 @@ export default function RootLayout({
                   "contactPoint": {
                     "@type": "ContactPoint",
                     "contactType": "customer service",
-                    "email": "support@lorem.com"
+                    "email": "support@healthcaredrugstore.com"
                   }
                 })
               }}
@@ -56,11 +56,11 @@ export default function RootLayout({
                 __html: JSON.stringify({
                   "@context": "https://schema.org",
                   "@type": "WebSite",
-                  "name": "Lorem",
-                  "url": "http://209.126.86.149:3083",
+                  "name": "HealthcareDrugstore",
+                  "url": "https://healthcaredrugstore.com",
                   "potentialAction": {
                     "@type": "SearchAction",
-                    "target": "http://209.126.86.149:3083/products?q={search_term_string}",
+                    "target": "https://healthcaredrugstore.com/products?q={search_term_string}",
                     "query-input": "required name=search_term_string"
                   }
                 })

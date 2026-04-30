@@ -1,54 +1,76 @@
-import React from "react";
+import ScrollReveal from "../components/ScrollReveal";
+
+const LegalSection = ({ title, content }: { title: string, content: React.ReactNode }) => (
+    <div className="mb-12">
+        <h2 className="text-xs font-black text-navy uppercase tracking-widest mb-4">{title}</h2>
+        <div className="text-navy/60 text-sm leading-relaxed space-y-4">
+            {content}
+        </div>
+    </div>
+);
 
 export default function PrivacyPolicy() {
     return (
-        <main className="min-h-screen bg-white font-sans pt-32 pb-24">
-            <div className="max-w-4xl mx-auto px-6 md:px-12">
-                <div className="mb-16">
-                    <span className="text-accent-red text-sm font-black uppercase tracking-[0.2em] mb-4 block">Legal</span>
-                    <h1 className="text-4xl md:text-5xl font-black text-navy tracking-tight mb-6">
-                        Privacy Policy
-                    </h1>
-                    <p className="text-navy/50 font-medium text-lg">
-                        Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
+        <main className="min-h-screen bg-white">
+            {/* Header Image Area without excessive top padding */}
+            <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-end pb-12 border-b border-gray-100">
+                <div className="absolute inset-x-0 top-0 h-full">
+                    <img 
+                        src="/legal.png" 
+                        alt="Legal Data Protocol"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent" />
                 </div>
-
-                <div className="prose prose-lg text-navy/70 space-y-8">
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">1. Information Collection</h2>
-                        <p>
-                            We collect information from you when you register on our site, place an order, subscribe to our newsletter, or fill out a form. When ordering or registering on our site, as appropriate, you may be asked to enter your: name, e-mail address, mailing address, phone number or credit card information. You may, however, visit our site anonymously.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">2. Use of Data</h2>
-                        <p>
-                            Any of the information we collect from you may be used in one of the following ways: to personalize your experience, to improve our website, to improve customer service, to process transactions, or to administer a contest, promotion, survey, or other site feature.
-                        </p>
-                        <ul className="list-disc pl-6 space-y-2 mt-4">
-                            <li>To deliver the products and services that you have requested.</li>
-                            <li>To manage your account and provide you with customer support.</li>
-                            <li>To communicate with you about products or services that may be of interest to you.</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">3. Data Protection</h2>
-                        <p>
-                            We implement a variety of security measures to maintain the safety of your personal information when you place an order or enter, submit, or access your personal information. We offer the use of a secure server. All supplied sensitive/credit information is transmitted via Secure Socket Layer (SSL) technology and then encrypted into our Payment gateway providers database.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">4. Cookies</h2>
-                        <p>
-                            Yes, we use cookies. Cookies are small files that a site or its service provider transfers to your computer's hard drive through your Web browser (if you allow) that enables the sites or service providers systems to recognize your browser and capture and remember certain information.
-                        </p>
-                    </section>
+                <div className="relative z-10 max-w-3xl mx-auto px-6 md:px-12 w-full">
+                    <ScrollReveal animation="up">
+                        <p className="text-accent-red font-black uppercase tracking-[0.4em] text-[10px] mb-2">Legal Protection</p>
+                        <h1 className="text-4xl lg:text-5xl font-black text-navy tracking-tight">Privacy Policy</h1>
+                    </ScrollReveal>
                 </div>
-            </div>
+            </section>
+
+            <section className="py-16 px-6 md:px-12">
+                <div className="max-w-3xl mx-auto">
+                    <ScrollReveal animation="up">
+                        <p className="text-[10px] font-bold text-navy/30 uppercase tracking-[0.2em] mb-12 pb-6 border-b border-gray-50">
+                            HealthcareDrugstore.com Protocol Revision: April 28, 2026
+                        </p>
+
+                        <LegalSection 
+                            title="1. Personal Data Management" 
+                            content={
+                                <p>We process your data with clinical precision. This includes contact information, shipping logistics, and payment identifiers necessary for pharmaceutical procurement.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="2. Security Systems" 
+                            content={
+                                <p>End-to-end encryption is active for all transactions. We do not retain local records of sensitive financial credentials. All operations are PCI-DSS compliant.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="3. Information Sharing" 
+                            content={
+                                <p>Data transmission to third parties is restricted only to essential logistics partners and medical verification services required to fulfill your order.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="4. Analytical Cookies" 
+                            content={
+                                <p>Brief session identities (cookies) are used to maintain your cart and session status. These do not compromise your patient privacy.</p>
+                            } 
+                        />
+
+                        <div className="mt-20 pt-10 border-t border-gray-50 text-[11px] font-bold text-navy/40 uppercase tracking-widest text-center">
+                            Inquiries: privacy@healthcaredrugstore.com
+                        </div>
+                    </ScrollReveal>
+                </div>
+            </section>
         </main>
     );
 }

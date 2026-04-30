@@ -62,6 +62,12 @@ function getImageUrl(url: string): string {
     return full.replace(/([^:])\/\/+/g, '$1/');
 }
 
+const isEmptyContent = (content: string | undefined | null) => {
+    if (!content) return true;
+    const stripped = content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    return stripped === "";
+};
+
 function StarRating({ rating, size = 18 }: { rating: number; size?: number }) {
     return (
         <div className="flex items-center gap-0.5">
@@ -136,7 +142,7 @@ function ImageGallery({ images, title, savings }: { images: string[]; title: str
 
     return (
         <div
-            className="lg:sticky lg:top-24"
+            className="group"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
@@ -410,7 +416,10 @@ export default function ProductClient() {
         if (product?.id) {
             trackProductClick(product.id);
         }
-        if (product?.productLink) window.open(product.productLink, "_blank");
+        if (product?.productLink) {
+            const redirectUrl = `/redirect?url=${encodeURIComponent(product.productLink)}&product=${encodeURIComponent(product.title)}`;
+            window.open(redirectUrl, "_blank");
+        }
         else toast.error("Checkout link not configured.");
     };
 
@@ -484,11 +493,36 @@ export default function ProductClient() {
         }
 
         return (
-            <li key={index} className={liClassName}>
+            <li key={index} className={`${liClassName} break-words min-w-0`}>
                 {iconElement}
-                <span className={textClassName} dangerouslySetInnerHTML={{ __html: text }} />
+                <span className={`${textClassName} break-words min-w-0`} dangerouslySetInnerHTML={{ __html: text }} />
             </li>
         );
+    };
+
+    const replaceIcons = (text: string) => {
+        if (!text) return "";
+        let result = text;
+        const iconMappings: { [key: string]: string } = {
+            check: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-[#3D5BC9]"><polyline points="20 6 9 17 4 12"/></svg>',
+            star: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+            zap: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+            heart: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+            shield: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D5BC9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>',
+            leaf: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 14 6a7 7 0 0 1 7 7v7h-7a7 7 0 0 1-3.32-9.66L11 20z"/><path d="m2 22 5.5-5.5"/></svg>',
+            info: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+            arrow: '<svg style="display:inline-block; vertical-align:middle; margin-top:-3px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D5BC9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+            bullet: '<span style="display:inline-block; vertical-align:middle; width:6px; height:6px; border-radius:100%; background:#9ca3af; margin-right:8px; margin-top:-2px;"></span>',
+        };
+
+        // Replace all instances of [icon:name]
+        result = result.replace(/\[icon:([a-z]+)\]/gi, (match, iconName) => {
+            const name = iconName.toLowerCase();
+            const realName = name === 'bullett' ? 'bullet' : name;
+            return iconMappings[realName] || match;
+        });
+
+        return result;
     };
 
     return (
@@ -497,27 +531,36 @@ export default function ProductClient() {
             {/* Breadcrumb */}
             <div style={{ background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(0,31,63,0.06)" }}>
                 <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-2.5 flex items-center gap-2 text-[10px] font-semibold text-navy/35 uppercase tracking-wider">
-                    <Link href="/" className="hover:text-navy transition-colors">Home</Link>
+                    <Link href="/" className="hover:text-navy transition-colors shrink-0">Home</Link>
+                    {product.category && (
+                        <>
+                            <span className="text-navy/20">/</span>
+                            <Link
+                                href={`/products?category=${encodeURIComponent((typeof product.category === 'object' && product.category !== null) ? product.category.name : (product.category as string))}`}
+                                className="hover:text-navy transition-colors truncate max-w-[120px]"
+                            >
+                                {(typeof product.category === 'object' && product.category !== null) ? product.category.name : product.category}
+                            </Link>
+                        </>
+                    )}
                     <span className="text-navy/20">/</span>
-                    <Link href="/" className="hover:text-navy transition-colors">{(typeof product.category === 'object' && product.category !== null) ? product.category.name : product.category}</Link>
-                    <span className="text-navy/20">/</span>
-                    <span className="text-navy/50 line-clamp-1 max-w-xs">{product.title}</span>
+                    <span className="text-navy/50 line-clamp-1 max-w-[150px] truncate">{product.title}</span>
                 </div>
             </div>
 
             {/* Main Grid */}
             <div className="max-w-[1440px] mx-auto px-6 md:px-12 py-10 lg:py-14">
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-8 lg:gap-10 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-10 items-start">
 
                     {/* LEFT — Image Gallery */}
-                    <div className="lg:sticky lg:top-24">
+                    <div className="lg:sticky lg:top-24 w-full">
                         <ScrollReveal animation="fade">
                             <ImageGallery images={galleryImages} title={product.title} savings={savings} />
                         </ScrollReveal>
                     </div>
 
                     {/* RIGHT — Product Info */}
-                    <ScrollReveal animation="right" delay={100}>
+                    <ScrollReveal animation="right" delay={100} className="min-w-0">
                         <div className="space-y-5">
                             {/* Category pill — Link to filtered results */}
                             <Link
@@ -798,11 +841,11 @@ export default function ProductClient() {
                                     Guaranteed Safe &amp; Secure Checkout
                                 </p>
                                 {/* Accepted payment methods */}
-                                <div className="flex justify-center pt-1">
+                                <div className="flex justify-center pt-1 overflow-hidden">
                                     <img
                                         src="/accepted_payment.png"
                                         alt="Accepted payment methods"
-                                        className="h-12 w-auto object-contain"
+                                        className="h-10 w-auto object-contain max-w-full"
                                     />
                                 </div>
                             </div>
@@ -828,7 +871,7 @@ export default function ProductClient() {
                                 {/* Dynamic Top Section (First Priority) */}
                                 {(() => {
                                     const order = product.sectionOrder || ["description", "highlights", "directions", "benefits", "guarantee", "shippingInfo"];
-                                    const firstKey = order.find(k => (product as any)[k]);
+                                    const firstKey = order.find(k => !isEmptyContent((product as any)[k]));
                                     if (!firstKey) return null;
 
                                     const contentField = (product as any)[firstKey];
@@ -838,14 +881,14 @@ export default function ProductClient() {
                                         return (
                                             <div className="text-navy/75 leading-relaxed space-y-4 pt-6">
                                                 {isHtml ? (
-                                                    <div className="prose prose-navy max-w-none text-[16px]" dangerouslySetInnerHTML={{ __html: contentField }} />
+                                                    <div className="prose prose-navy max-w-none text-[16px] break-words w-full" dangerouslySetInnerHTML={{ __html: replaceIcons(contentField) }} />
                                                 ) : (
                                                     contentField?.split('\n').filter((l: string) => l.trim()).map((line: string, i: number) => {
                                                         const trimmedLine = line.trim();
                                                         if (/\[icon:/i.test(trimmedLine)) {
                                                             return <ul key={i}>{renderLineWithIcon(trimmedLine, i, 'none', "flex items-start gap-4", "leading-[1.85]")}</ul>;
                                                         }
-                                                        return <p key={i} dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                                        return <p key={i} className="break-words" dangerouslySetInnerHTML={{ __html: replaceIcons(trimmedLine) }} />;
                                                     })
                                                 )}
                                             </div>
@@ -907,15 +950,15 @@ export default function ProductClient() {
                 <div className="max-w-4xl mx-auto space-y-6">
                     {(() => {
                         const order = product.sectionOrder || ["description", "highlights", "directions", "benefits", "guarantee", "shippingInfo"];
-                        const firstKey = order.find(k => (product as any)[k]);
-                        const remainingKeys = order.filter(k => k !== firstKey && (product as any)[k]);
+                        const firstKey = order.find(k => !isEmptyContent((product as any)[k]));
+                        const remainingKeys = order.filter(k => k !== firstKey && !isEmptyContent((product as any)[k]));
                         if (remainingKeys.length === 0) return null;
 
                         return remainingKeys.map((sectionKey) => {
                             let content = null;
                             const sectionContent = (product as any)[sectionKey];
-                            if (!sectionContent) return null;
-                            
+                            if (isEmptyContent(sectionContent)) return null;
+
                             const isHtml = /<\/?[a-z][\s\S]*>/i.test(sectionContent);
 
                             /* DESCRIPTION */
@@ -927,9 +970,9 @@ export default function ProductClient() {
                                         </div>
                                         <div className="px-8 py-7 space-y-4">
                                             {isHtml ? (
-                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85]" dangerouslySetInnerHTML={{ __html: sectionContent }} />
+                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85] break-words overflow-hidden w-full" dangerouslySetInnerHTML={{ __html: sectionContent }} />
                                             ) : (
-                                                <div className="text-[18px] text-gray-700 leading-[1.85] space-y-4">
+                                                <div className="text-[18px] text-gray-700 leading-[1.85] space-y-4 break-words overflow-hidden w-full">
                                                     {product.description.split('\n').filter(l => l.trim()).map((line, i) => {
                                                         const trimmedLine = line.trim();
                                                         if (trimmedLine.startsWith('[icon:')) {
@@ -953,9 +996,9 @@ export default function ProductClient() {
                                         </div>
                                         <div className="px-8 py-7">
                                             {isHtml ? (
-                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85]" dangerouslySetInnerHTML={{ __html: sectionContent }} />
+                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85] break-words overflow-hidden w-full" dangerouslySetInnerHTML={{ __html: sectionContent }} />
                                             ) : (
-                                                <ul className="space-y-4">
+                                                <ul className="space-y-4 break-words overflow-hidden w-full">
                                                     {product.highlights.split('\n').filter(l => l.trim()).map((line, i) => renderLineWithIcon(line, i, 'bullet', "flex items-start gap-3 text-[18px] text-gray-700", "leading-relaxed"))}
                                                 </ul>
                                             )}
@@ -973,9 +1016,9 @@ export default function ProductClient() {
                                         </div>
                                         <div className="px-8 py-7">
                                             {isHtml ? (
-                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85]" dangerouslySetInnerHTML={{ __html: sectionContent }} />
+                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85] break-words overflow-hidden w-full" dangerouslySetInnerHTML={{ __html: sectionContent }} />
                                             ) : (
-                                                <ol className="space-y-4">
+                                                <ol className="space-y-4 break-words overflow-hidden w-full">
                                                     {product.directions.split('\n').filter(l => l.trim()).map((line, i) => renderLineWithIcon(line, i, 'number', "flex items-start gap-4 text-[18px] text-gray-700", "leading-relaxed pt-1"))}
                                                 </ol>
                                             )}
@@ -993,9 +1036,9 @@ export default function ProductClient() {
                                         </div>
                                         <div className="px-8 py-7">
                                             {isHtml ? (
-                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85]" dangerouslySetInnerHTML={{ __html: sectionContent }} />
+                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85] break-words overflow-hidden w-full" dangerouslySetInnerHTML={{ __html: sectionContent }} />
                                             ) : (
-                                                <ul className="space-y-4">
+                                                <ul className="space-y-4 break-words overflow-hidden w-full">
                                                     {product.benefits.split('\n').filter(l => l.trim()).map((line, i) => renderLineWithIcon(line, i, 'check', "flex items-start gap-3 text-[18px] text-gray-700", "leading-relaxed"))}
                                                 </ul>
                                             )}
@@ -1014,14 +1057,14 @@ export default function ProductClient() {
                                         </div>
                                         <div className="px-8 py-7 space-y-4">
                                             {isHtml ? (
-                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85]" dangerouslySetInnerHTML={{ __html: sectionContent }} />
+                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85] break-words w-full" dangerouslySetInnerHTML={{ __html: replaceIcons(sectionContent) }} />
                                             ) : (
                                                 product.guarantee.split('\n').filter(l => l.trim()).map((line, i) => {
                                                     const trimmedLine = line.trim();
                                                     if (/\[icon:/i.test(trimmedLine)) {
                                                         return <ul key={i}>{renderLineWithIcon(trimmedLine, i, 'none', "flex items-start gap-4 text-[18px] text-gray-700", "leading-relaxed")}</ul>;
                                                     }
-                                                    return <p key={i} className="text-[18px] text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                                    return <p key={i} className="text-[18px] text-gray-700 leading-relaxed break-words" dangerouslySetInnerHTML={{ __html: replaceIcons(trimmedLine) }} />;
                                                 })
                                             )}
                                         </div>
@@ -1038,14 +1081,14 @@ export default function ProductClient() {
                                         </div>
                                         <div className="px-8 py-7 space-y-4">
                                             {isHtml ? (
-                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85]" dangerouslySetInnerHTML={{ __html: sectionContent }} />
+                                                <div className="prose prose-navy max-w-none text-[18px] text-gray-700 leading-[1.85] break-words w-full" dangerouslySetInnerHTML={{ __html: replaceIcons(sectionContent) }} />
                                             ) : (
                                                 product.shippingInfo.split('\n').filter(l => l.trim()).map((line, i) => {
                                                     const trimmedLine = line.trim();
                                                     if (/\[icon:/i.test(trimmedLine)) {
                                                         return <ul key={i}>{renderLineWithIcon(trimmedLine, i, 'none', `flex items-start gap-4 text-[18px] ${i === 0 ? "font-semibold text-gray-800" : "text-gray-700"}`, "leading-relaxed")}</ul>;
                                                     }
-                                                    return <p key={i} className={`text-[18px] leading-relaxed ${i === 0 ? "font-semibold text-gray-800" : "text-gray-700"}`} dangerouslySetInnerHTML={{ __html: trimmedLine }} />;
+                                                    return <p key={i} className={`text-[18px] leading-relaxed break-words ${i === 0 ? "font-semibold text-gray-800" : "text-gray-700"}`} dangerouslySetInnerHTML={{ __html: replaceIcons(trimmedLine) }} />;
                                                 })
                                             )}
                                         </div>

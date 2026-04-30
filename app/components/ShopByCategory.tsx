@@ -21,13 +21,23 @@ const CATEGORY_IMAGES: Record<string, string> = {
 
 function getImageUrl(url: string): string {
     if (!url) return CATEGORY_IMAGES["Default"];
-    // Already a full URL — fix any accidental double slashes after protocol
+    
+    // If it's already a full URL, just clean up extra slashes
     if (url.startsWith("http")) {
-        const [proto, rest] = url.split("://");
-        return proto + "://" + rest.replace(/\/\/+/g, "/");
+        return url.replace(/([^:])\/\/+/g, '$1/');
     }
-    // Relative path — prefix apiHost
-    return `${apiHost}${url.startsWith("/") ? "" : "/"}${url}`;
+    
+    // If it looks like a relative path but doesn't include /api/images, add it
+    // (Assuming backend only returns filename sometimes)
+    let path = url;
+    if (!path.startsWith("/") && !path.includes("/api/images/")) {
+        path = `/api/images/${path}`;
+    } else if (path.startsWith("/") && !path.startsWith("/api/images/")) {
+        path = `/api/images${path}`;
+    }
+    
+    const full = `${apiHost}${path.startsWith("/") ? "" : "/"}${path}`;
+    return full.replace(/([^:])\/\/+/g, '$1/');
 }
 
 export default function ShopByCategory() {

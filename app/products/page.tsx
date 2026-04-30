@@ -187,6 +187,7 @@ function ProductsContent() {
             {/* CollectionPage Schema */}
             <script
                 type="application/ld+json"
+                suppressHydrationWarning
                 dangerouslySetInnerHTML={{
                     __html: JSON.stringify({
                         "@context": "https://schema.org",

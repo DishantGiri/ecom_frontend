@@ -127,7 +127,7 @@ const Navbar = () => {
     setIsCurrencyOpen(false);
   }, [pathname]);
 
-  if (pathname?.startsWith("/dashboard")) return null;
+  if (pathname?.startsWith("/dashboard") || pathname === "/redirect") return null;
 
   return (
     <header className="font-sans w-full">
@@ -172,12 +172,13 @@ const Navbar = () => {
           </div>
 
           {/* Logo — centered on mobile, left-aligned on desktop */}
-          <div className="flex-shrink-0 flex items-center space-x-2 md:space-x-3 absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0" translate="no">
-            <div className="bg-navy p-2 rounded-xl flex-shrink-0">
-              <div className="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center text-white font-black text-sm md:text-base italic">L</div>
-            </div>
-            <Link href="/" className="text-xl md:text-2xl font-black text-navy tracking-tight uppercase flex items-baseline leading-none">
-              Lorem<span className="text-accent-red text-2xl md:text-3xl font-black">.</span>
+          <div className="flex-shrink-0 flex items-center absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 group" translate="no">
+            <Link href="/" className="flex items-center gap-2 md:gap-3">
+              <img src="/logo.png" alt="HealthcareDrugstore Logo" className="h-12 md:h-14 w-auto object-contain transition-transform group-hover:scale-105" />
+              <div className="flex flex-col justify-center leading-none mt-0.5">
+                <span className="text-base md:text-[19px] font-black text-navy tracking-tight leading-none">healthcare</span>
+                <span className="text-xs md:text-[15px] font-black text-accent-red tracking-tight leading-none mt-0.5">drugstore</span>
+              </div>
             </Link>
           </div>
 
@@ -404,8 +405,8 @@ const Navbar = () => {
           {/* Header */}
           <div className="p-6 pb-4 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10 transition-all">
             <div className="flex items-center space-x-3">
-              <div className="bg-navy w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg shadow-navy/20">
-                <div className="text-white font-black text-[14px] italic">L</div>
+              <div className="w-11 h-11 flex items-center justify-center p-1">
+                <img src="/logo.png" alt="HD Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="font-black text-navy text-[15px] uppercase tracking-wider leading-none">Menu</span>
@@ -519,7 +520,7 @@ const Navbar = () => {
             </div>
 
             <div className="px-4 pb-8 text-center">
-              <p className="text-[10px] font-bold text-navy/20 uppercase tracking-[0.15em]">© 2024 Lorem Premium Supplements</p>
+              <p className="text-[10px] font-bold text-navy/20 uppercase tracking-[0.15em]">© 2024 HealthcareDrugstore</p>
             </div>
           </div>
         </div>

@@ -1,54 +1,79 @@
-import React from "react";
+import ScrollReveal from "../components/ScrollReveal";
+
+const LegalSection = ({ title, content }: { title: string, content: React.ReactNode }) => (
+    <div className="mb-12">
+        <h2 className="text-xs font-black text-navy uppercase tracking-widest mb-4">{title}</h2>
+        <div className="text-navy/60 text-sm leading-relaxed space-y-4">
+            {content}
+        </div>
+    </div>
+);
 
 export default function ShippingPolicy() {
     return (
-        <main className="min-h-screen bg-white font-sans pt-32 pb-24">
-            <div className="max-w-4xl mx-auto px-6 md:px-12">
-                <div className="mb-16">
-                    <span className="text-accent-red text-sm font-black uppercase tracking-[0.2em] mb-4 block">Legal</span>
-                    <h1 className="text-4xl md:text-5xl font-black text-navy tracking-tight mb-6">
-                        Shipping Policy
-                    </h1>
-                    <p className="text-navy/50 font-medium text-lg">
-                        Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
+        <main className="min-h-screen bg-white">
+            {/* Header Image Area without excessive top padding */}
+            <section className="relative h-64 md:h-80 w-full overflow-hidden flex items-end pb-12 border-b border-gray-100">
+                <div className="absolute inset-x-0 top-0 h-full">
+                    <img 
+                        src="/legal.png" 
+                        alt="Logistics Protocol"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent" />
                 </div>
-
-                <div className="prose prose-lg text-navy/70 space-y-8">
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">1. Order Processing Time</h2>
-                        <p>
-                            All orders are processed within 1 to 2 business days (excluding weekends and holidays) after receiving your order confirmation email. You will receive another notification when your order has shipped.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">2. Shipping Rates and Estimates</h2>
-                        <p>
-                            Shipping charges for your order will be calculated and displayed at checkout. We offer several delivery options varying by speed and carrier.
-                        </p>
-                        <ul className="list-disc pl-6 space-y-2 mt-4">
-                            <li>Standard Shipping: 3-5 business days</li>
-                            <li>Expedited Shipping: 1-2 business days</li>
-                            <li>International Shipping: 7-14 business days</li>
-                        </ul>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">3. Local Delivery</h2>
-                        <p>
-                            Free local delivery is available for orders over $50 within the greater metropolitan area. For orders under $50, we charge a flat rate delivery fee of $10. Deliveries are made from 9 AM to 5 PM on weekdays.
-                        </p>
-                    </section>
-
-                    <section>
-                        <h2 className="text-2xl font-bold text-navy mb-4">4. How do I check the status of my order?</h2>
-                        <p>
-                            When your order has shipped, you will receive an email notification from us which will include a tracking number you can use to check its status. Please allow 48 hours for the tracking information to become available.
-                        </p>
-                    </section>
+                <div className="relative z-10 max-w-3xl mx-auto px-6 md:px-12 w-full">
+                    <ScrollReveal animation="up">
+                        <p className="text-accent-red font-black uppercase tracking-[0.4em] text-[10px] mb-2">Logistics Protocol</p>
+                        <h1 className="text-4xl lg:text-5xl font-black text-navy tracking-tight">Shipping Policy</h1>
+                    </ScrollReveal>
                 </div>
-            </div>
+            </section>
+
+            <section className="py-16 px-6 md:px-12">
+                <div className="max-w-3xl mx-auto">
+                    <ScrollReveal animation="up">
+                        <p className="text-[10px] font-bold text-navy/30 uppercase tracking-[0.2em] mb-12 pb-6 border-b border-gray-50">
+                            HealthcareDrugstore.com Logistics Guidelines
+                        </p>
+
+                        <LegalSection 
+                            title="1. Dispatch Protocol" 
+                            content={
+                                <p>Most medical orders are dispatched within 24–48 hours of clinical verification. We operate through neutral distribution nodes for maximum efficiency.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="2. Delivery Timelines" 
+                            content={
+                                <ul className="list-disc pl-5 space-y-2">
+                                    <li><strong>Domestic Secure:</strong> 3–5 Business Days</li>
+                                    <li><strong>International Logistics:</strong> 7–14 Business Days</li>
+                                </ul>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="3. Neutral Packaging" 
+                            content={
+                                <p>All exports are shipped in discreet, unbranded containers to maintain absolute patient confidentiality across all territories.</p>
+                            } 
+                        />
+
+                        <LegalSection 
+                            title="4. Transit Responsibility" 
+                            content={
+                                <p>Once dispatched, tracking identities are logged. HealthcareDrugstore.com is not responsible for local customs delays or localized import duties.</p>
+                            } 
+                        />
+
+                        <div className="mt-20 pt-10 border-t border-gray-50 text-[11px] font-bold text-navy/40 uppercase tracking-widest text-center">
+                            Queries: shipping@healthcaredrugstore.com
+                        </div>
+                    </ScrollReveal>
+                </div>
+            </section>
         </main>
     );
 }
