@@ -3,5 +3,5 @@
  * Handles cases where NEXT_PUBLIC_API_HOST is set with a trailing slash in Coolify.
  */
 export const apiHost = (
-    process.env.NEXT_PUBLIC_API_HOST || "http://209.126.86.149:8083"
+    process.env.NEXT_PUBLIC_API_HOST || "https://api.healthcaredrugstore.com"
 ).replace(/\/+$/, "");

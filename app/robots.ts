@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const siteUrl = (
-    process.env.NEXT_PUBLIC_SITE_URL || "http://209.126.86.149:3083"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://healthcaredrugstore.com"
 ).replace(/\/+$/, "");
 
 export default function robots(): MetadataRoute.Robots {

@@ -20,8 +20,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="http://209.126.86.149:8083" />
-        <link rel="dns-prefetch" href="http://209.126.86.149:8083" />
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_HOST || "https://api.healthcaredrugstore.com"} />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_HOST || "https://api.healthcaredrugstore.com"} />
       </head>
       <body className="antialiased">
         <LanguageProvider>

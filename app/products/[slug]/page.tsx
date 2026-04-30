@@ -55,7 +55,7 @@ export default async function ProductPage({
             }),
             offers: {
                 "@type": "Offer",
-                url: `${process.env.NEXT_PUBLIC_SITE_URL || "http://209.126.86.149:3083"}/products/${slug}`,
+                url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://healthcaredrugstore.com"}/products/${slug}`,
                 priceCurrency: "USD",
                 price: product.discountedPrice,
                 priceValidUntil: new Date(
