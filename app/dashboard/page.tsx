@@ -12,6 +12,42 @@ import "react-quill-new/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
+const showConfirm = (message: string, onConfirm: () => void, confirmText = "Delete") => {
+    toast((t) => (
+        <div className="flex flex-col gap-3 p-1 font-sans">
+            <p className="text-sm font-semibold text-navy">{message}</p>
+            <div className="flex justify-end gap-2">
+                <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="px-3 py-1.5 text-xs font-bold text-navy/60 hover:text-navy transition-colors rounded-lg bg-gray-50 border border-gray-100"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={() => {
+                        toast.dismiss(t.id);
+                        onConfirm();
+                    }}
+                    className={`px-3 py-1.5 text-xs font-bold text-white transition-colors rounded-lg shadow-sm ${
+                        confirmText === "Upload" ? "bg-navy hover:bg-black" : "bg-red-500 hover:bg-red-600"
+                    }`}
+                >
+                    {confirmText}
+                </button>
+            </div>
+        </div>
+    ), {
+        duration: Infinity,
+        position: "top-center",
+        style: {
+            borderRadius: "16px",
+            border: "1px solid #f1f5f9",
+            padding: "16px",
+            boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+        }
+    });
+};
+
 interface Review {
     id: number;
     reviewerName: string;
@@ -195,28 +231,27 @@ export default function ProductsPage() {
         setFormData({ ...formData, sectionOrder: newOrder });
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this product?")) return;
-
-        const loadingToast = toast.loading("Deleting product...");
-        try {
-            const token = getTokenFromCookie();
-            const response = await fetch(`${apiHost}/api/admin/products/${id}`, {
-                method: "DELETE",
-                headers: {
-                    'Authorization': `Bearer ${token}`
+    const handleDelete = (id: number) => {
+        showConfirm("Are you sure you want to delete this product?", async () => {
+            const loadingToast = toast.loading("Deleting product...");
+            try {
+                const token = getTokenFromCookie();
+                const response = await fetch(`${apiHost}/api/admin/products/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    setProducts(products.filter(p => p.id !== id));
+                    toast.success("Product deleted successfully", { id: loadingToast });
+                } else {
+                    toast.error("Failed to delete product", { id: loadingToast });
                 }
-            });
-            if (response.ok) {
-                setProducts(products.filter(p => p.id !== id));
-                toast.success("Product deleted successfully", { id: loadingToast });
-            } else {
+            } catch (err) {
                 toast.error("Failed to delete product", { id: loadingToast });
             }
-        } catch (error) {
-            console.error("Error deleting product:", error);
-            toast.error("Failed to delete product", { id: loadingToast });
-        }
+        });
     };
 
     const handleAddOffer = () => {
@@ -257,77 +292,83 @@ export default function ProductsPage() {
         }
     };
 
-    const handleRemoveExistingImage = async (type: 'gallery' | 'promotional', filename: string) => {
+    const handleRemoveExistingImage = (type: 'gallery' | 'promotional', filename: string) => {
         if (!editingProduct) return;
-        const confirmDelete = window.confirm("Are you sure you want to delete this image? This action cannot be undone.");
-        if (!confirmDelete) return;
+        showConfirm("Are you sure you want to delete this image? This action cannot be undone.", async () => {
+            const loadingToast = toast.loading("Deleting image...");
+            try {
+                const token = getTokenFromCookie();
+                const response = await fetch(`${apiHost}/api/admin/products/${editingProduct.id}/${type}/${filename.split('/').pop()}`, {
+                    method: "DELETE",
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
-        const loadingToast = toast.loading("Deleting image...");
-        try {
-            const token = getTokenFromCookie();
-            const response = await fetch(`${apiHost}/api/admin/products/${editingProduct.id}/${type}/${filename.split('/').pop()}`, {
-                method: "DELETE",
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (response.ok) {
-                if (type === 'gallery') {
-                    setExistingGalleryImages(prev => prev.filter(f => f !== filename));
+                if (response.ok) {
+                    if (type === 'gallery') {
+                        setExistingGalleryImages(prev => prev.filter(f => f !== filename));
+                    } else {
+                        setExistingPromotionalImages(prev => prev.filter(f => f !== filename));
+                    }
+                    fetchProducts();
+                    toast.success("Image deleted", { id: loadingToast });
                 } else {
-                    setExistingPromotionalImages(prev => prev.filter(f => f !== filename));
+                    toast.error("Failed to delete image.", { id: loadingToast });
                 }
-                fetchProducts();
-                toast.success("Image deleted", { id: loadingToast });
-            } else {
+            } catch (error) {
+                console.error("Error deleting image", error);
                 toast.error("Failed to delete image.", { id: loadingToast });
             }
-        } catch (error) {
-            console.error("Error deleting image", error);
-            toast.error("Failed to delete image.", { id: loadingToast });
-        }
+        });
     };
 
     const handleOfferImageChange = (index: number, file: File) => {
         setOfferImages({ ...offerImages, [index]: file });
     };
 
-    const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleBulkUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const confirmUpload = window.confirm(`Are you sure you want to bulk upload products from ${file.name}?`);
-        if (!confirmUpload) {
-            e.target.value = ""; // Reset input
-            return;
-        }
+        const inputElement = e.target;
 
-        const loadingToast = toast.loading("Processing bulk upload...");
-        try {
-            const token = getTokenFromCookie();
-            const form = new FormData();
-            form.append("file", file);
+        showConfirm(`Are you sure you want to bulk upload products from ${file.name}?`, async () => {
+            const loadingToast = toast.loading("Processing bulk upload...");
+            try {
+                const token = getTokenFromCookie();
+                const form = new FormData();
+                form.append("file", file);
 
-            const response = await fetch(`${apiHost}/api/admin/products/bulk-upload`, {
-                method: "POST",
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: form
-            });
+                const response = await fetch(`${apiHost}/api/admin/products/bulk-upload`, {
+                    method: "POST",
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: form
+                });
 
-            if (response.ok) {
-                toast.success("Bulk upload completed successfully", { id: loadingToast });
-                fetchProducts();
-            } else {
-                const error = await response.json();
-                toast.error(error.message || "Failed to process bulk upload", { id: loadingToast });
+                if (response.ok) {
+                    toast.success("Bulk upload completed successfully", { id: loadingToast });
+                    fetchProducts();
+                } else {
+                    let errMsg = "Failed to process bulk upload";
+                    try {
+                        const errorData = await response.json();
+                        errMsg = errorData.message || errMsg;
+                    } catch {
+                        try {
+                            const errorText = await response.text();
+                            if (errorText) errMsg = errorText;
+                        } catch {}
+                    }
+                    toast.error(errMsg, { id: loadingToast });
+                }
+            } catch (error) {
+                console.error("Error during bulk upload:", error);
+                toast.error("An error occurred during bulk upload", { id: loadingToast });
+            } finally {
+                inputElement.value = ""; // Reset input
             }
-        } catch (error) {
-            console.error("Error during bulk upload:", error);
-            toast.error("An error occurred during bulk upload", { id: loadingToast });
-        } finally {
-            e.target.value = ""; // Reset input
-        }
+        }, "Upload");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -433,33 +474,33 @@ export default function ProductsPage() {
         }
     };
 
-    const handleDeleteReview = async (reviewId: number) => {
-        if (!confirm("Are you sure you want to delete this review?")) return;
+    const handleDeleteReview = (reviewId: number) => {
+        showConfirm("Are you sure you want to delete this review?", async () => {
+            const loadingToast = toast.loading("Deleting review...");
+            try {
+                const token = getTokenFromCookie();
+                const response = await fetch(`${apiHost}/api/admin/products/reviews/${reviewId}`, {
+                    method: "DELETE",
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
-        const loadingToast = toast.loading("Deleting review...");
-        try {
-            const token = getTokenFromCookie();
-            const response = await fetch(`${apiHost}/api/admin/products/reviews/${reviewId}`, {
-                method: "DELETE",
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (response.ok) {
-                toast.success("Review deleted", { id: loadingToast });
-                if (editingProduct && editingProduct.slug) {
-                    const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.slug}`);
-                    if (refreshed.ok) {
-                        const data = await refreshed.json();
-                        setEditingProduct(data);
-                        setProducts(products.map(p => p.id === data.id ? data : p));
+                if (response.ok) {
+                    toast.success("Review deleted", { id: loadingToast });
+                    if (editingProduct && editingProduct.slug) {
+                        const refreshed = await fetch(`${apiHost}/api/products/${editingProduct.slug}`);
+                        if (refreshed.ok) {
+                            const data = await refreshed.json();
+                            setEditingProduct(data);
+                            setProducts(products.map(p => p.id === data.id ? data : p));
+                        }
                     }
+                } else {
+                    toast.error("Failed to delete review", { id: loadingToast });
                 }
-            } else {
-                toast.error("Failed to delete review", { id: loadingToast });
+            } catch (error) {
+                toast.error("Error deleting review", { id: loadingToast });
             }
-        } catch (error) {
-            toast.error("Error deleting review", { id: loadingToast });
-        }
+        });
     };
 
     const resetForm = () => {

@@ -15,7 +15,7 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
                     <div className="space-y-6">
                         <Link href="/" className="inline-block">
-                            <span className="text-2xl font-black text-white tracking-widest uppercase italic">
+                            <span className="text-lg sm:text-2xl font-black text-white tracking-wide sm:tracking-widest uppercase italic">
                                 HealthcareDrugstore<span className="text-accent-red">.com</span>
                             </span>
                         </Link>

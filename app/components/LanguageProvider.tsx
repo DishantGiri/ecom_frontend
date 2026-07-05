@@ -66,8 +66,10 @@ const LanguageContext = createContext<LanguageContextType>({
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
     const [language, setLanguageState] = useState("en");
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const savedLang = localStorage.getItem("preferred_language");
         if (savedLang) {
             setLanguageState(savedLang);
@@ -99,23 +101,34 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }, []);
 
     useEffect(() => {
+        if (!mounted) return;
+
+        let retryCount = 0;
         const translatePage = () => {
             const select = document.querySelector(".goog-te-combo") as HTMLSelectElement;
             if (select) {
                 select.value = language;
                 select.dispatchEvent(new Event("change"));
-            } else {
-                // Retry if the element isn't ready yet
-                setTimeout(translatePage, 1000);
+            } else if (retryCount < 10) {
+                retryCount++;
+                setTimeout(translatePage, 500);
             }
         };
 
         // Update cookie as well for better persistence
-        document.cookie = `googtrans=/en/${language}; path=/; domain=${window.location.host}`;
+        const host = window.location.hostname;
+        const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(host);
+        if (!isIp && host !== "localhost") {
+            const domainParts = host.split('.');
+            if (domainParts.length >= 2) {
+                const rootDomain = domainParts.slice(-2).join('.');
+                document.cookie = `googtrans=/en/${language}; path=/; domain=.${rootDomain}`;
+            }
+        }
         document.cookie = `googtrans=/en/${language}; path=/`;
 
         translatePage();
-    }, [language]);
+    }, [language, mounted]);
 
     const setLanguage = React.useCallback((code: string) => {
         if (code !== language) {

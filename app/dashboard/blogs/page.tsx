@@ -11,6 +11,40 @@ import 'react-quill-new/dist/quill.snow.css';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
+const showConfirm = (message: string, onConfirm: () => void, confirmText = "Delete") => {
+    toast((t) => (
+        <div className="flex flex-col gap-3 p-1 font-sans">
+            <p className="text-sm font-semibold text-navy">{message}</p>
+            <div className="flex justify-end gap-2">
+                <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="px-3 py-1.5 text-xs font-bold text-navy/60 hover:text-navy transition-colors rounded-lg bg-gray-50 border border-gray-100"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={() => {
+                        toast.dismiss(t.id);
+                        onConfirm();
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold text-white bg-red-500 hover:bg-red-600 transition-colors rounded-lg shadow-sm"
+                >
+                    {confirmText}
+                </button>
+            </div>
+        </div>
+    ), {
+        duration: Infinity,
+        position: "top-center",
+        style: {
+            borderRadius: "16px",
+            border: "1px solid #f1f5f9",
+            padding: "16px",
+            boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+        }
+    });
+};
+
 interface Blog {
     id: number;
     title: string;
@@ -89,28 +123,28 @@ export default function BlogsPage() {
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this blog?")) return;
-
-        const loadingToast = toast.loading("Deleting blog...");
-        try {
-            const token = getTokenFromCookie();
-            const response = await fetch(`${apiHost}/api/admin/blogs/${id}`, {
-                method: "DELETE",
-                headers: {
-                    'Authorization': `Bearer ${token}`
+    const handleDelete = (id: number) => {
+        showConfirm("Are you sure you want to delete this blog?", async () => {
+            const loadingToast = toast.loading("Deleting blog...");
+            try {
+                const token = getTokenFromCookie();
+                const response = await fetch(`${apiHost}/api/admin/blogs/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    setBlogs(blogs.filter(b => b.id !== id));
+                    toast.success("Blog deleted successfully", { id: loadingToast });
+                } else {
+                    toast.error("Failed to delete blog", { id: loadingToast });
                 }
-            });
-            if (response.ok) {
-                setBlogs(blogs.filter(b => b.id !== id));
-                toast.success("Blog deleted successfully", { id: loadingToast });
-            } else {
+            } catch (error) {
+                console.error("Error deleting blog:", error);
                 toast.error("Failed to delete blog", { id: loadingToast });
             }
-        } catch (error) {
-            console.error("Error deleting blog:", error);
-            toast.error("Failed to delete blog", { id: loadingToast });
-        }
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { getTokenFromCookie } from "../utils/auth";
 import { apiHost } from "../utils/apiHost";
+import { useRouter } from "next/navigation";
 
 function PasswordInput({
     id,
@@ -71,6 +72,7 @@ function PasswordInput({
 }
 
 export default function ChangePasswordPage() {
+    const router = useRouter();
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -105,10 +107,13 @@ export default function ChangePasswordPage() {
 
             if (response.ok) {
                 setStatus("success");
-                toast.success("Password updated successfully!");
+                toast.success("Password updated successfully! Redirecting...");
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
+                setTimeout(() => {
+                    router.push("/dashboard");
+                }, 1500);
             } else {
                 setStatus("error");
                 const err = await response.text();
